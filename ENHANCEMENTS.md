@@ -6,6 +6,24 @@ This document tracks feature ideas and improvements that are out of scope for v1
 
 ## Setup & Onboarding Improvements
 
+### Accordion UI for Study Setup
+**Status:** Requested
+**Priority:** Medium
+
+**Description:**
+Add accordion/collapsible sections to the study setup page for better visual organization.
+
+**Features:**
+- Collapsible sections for Research Goal, Research Questions, and Question Framework
+- All content remains on one page but sections can collapse for focus
+- Reduces visual clutter while maintaining single-page flow
+- Similar to original JSX implementation pattern
+
+**Rationale:**
+Keeps the simplicity of a single-page form while reducing overwhelming visual density. Users can focus on one section at a time.
+
+---
+
 ### AI Coaching During Study Setup
 **Status:** Deferred from v1
 **Priority:** Medium

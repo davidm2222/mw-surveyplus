@@ -103,3 +103,21 @@ export interface BadgeProps {
   children: React.ReactNode
   variant?: 'default' | 'success' | 'warning' | 'accent'
 }
+
+// ============================================================
+// Study Setup Form Types
+// ============================================================
+
+export interface StudyFormData {
+  basicInfo: {
+    name: string
+    description?: string
+  }
+  researchGoal: string
+  researchQuestions: string[]
+  questionFramework: string[]
+  configuration: {
+    participantCap?: number
+    closeDate?: string
+  }
+}

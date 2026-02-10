@@ -45,6 +45,34 @@ pnpm lint
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
+## Deployment
+
+This project is configured for automatic deployment to GitHub Pages.
+
+### Initial Setup
+
+1. Push your code to GitHub:
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/mw-surveyplus.git
+   git push -u origin main
+   ```
+
+2. Configure GitHub Pages:
+   - Go to your repo Settings → Pages
+   - Source: "GitHub Actions"
+
+3. Add your Anthropic API key as a secret:
+   - Go to Settings → Secrets and variables → Actions
+   - New repository secret: `ANTHROPIC_API_KEY`
+   - Paste your API key
+
+4. The GitHub Action will automatically build and deploy on every push to `main`
+
+Your site will be live at: `https://YOUR_USERNAME.github.io/mw-surveyplus/`
+
 ## Project Structure
 
 ```

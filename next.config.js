@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // We'll add static export later when deploying
+  output: 'export',
+  images: {
+    unoptimized: true, // Required for static export
+  },
+  // Disable server-side features not compatible with static export
+  trailingSlash: true,
 }
 
 module.exports = nextConfig
