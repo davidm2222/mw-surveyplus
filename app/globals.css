@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 45 20% 98%;        /* #fafaf8 — warm off-white page canvas */
+    --foreground: 240 21% 15%;       /* #1a1a2e — deep ink text */
+    --card: 40 18% 95%;              /* #f5f3ef — warm elevated surfaces */
+    --card-foreground: 240 21% 15%;  /* #1a1a2e — text on cards */
+    --muted: 40 15% 90%;             /* #e8e6e1 — disabled states, subtle backgrounds */
+    --muted-foreground: 240 10% 45%; /* #6b6b7c — secondary text */
+
+    /* Brand */
+    --primary: 243 75% 59%;          /* #4f46e5 — indigo-600 (CTA buttons, links) */
+    --primary-foreground: 0 0% 100%; /* #ffffff — text on primary */
+    --secondary: 240 5% 84%;         /* #d4d4d8 — zinc-300 (secondary buttons) */
+    --secondary-foreground: 240 21% 15%; /* #1a1a2e — text on secondary */
+    --accent: 188 94% 37%;           /* #0891b2 — cyan-600 (interview UI, highlights) */
+    --accent-foreground: 0 0% 100%;  /* #ffffff — text on accent */
+
+    /* Semantic */
+    --success: 160 84% 39%;          /* #059669 — emerald-600 (completions) */
+    --success-foreground: 0 0% 100%; /* #ffffff */
+    --warning: 32 95% 44%;           /* #d97706 — amber-600 (preview mode, cautions) */
+    --warning-foreground: 0 0% 100%; /* #ffffff */
+    --destructive: 0 72% 51%;        /* #dc2626 — red-600 (danger, errors) */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+
+    /* UI Elements */
+    --border: 40 12% 88%;            /* #e8e6e1 — warm gray borders */
+    --ring: 243 75% 59%;             /* #4f46e5 — focus rings (matches primary) */
+    --radius: 0.75rem;               /* 12px — base container radius */
+  }
+
+  .dark {
+    /* Surfaces */
+    --background: 240 15% 7%;        /* #0f0f14 — very dark with warm tint */
+    --foreground: 45 10% 93%;        /* #edece8 — warm off-white text */
+    --card: 240 12% 10%;             /* #161619 — elevated surfaces (lighter in dark) */
+    --card-foreground: 45 10% 93%;   /* #edece8 */
+    --muted: 240 10% 18%;            /* #2a2a30 — subtle backgrounds */
+    --muted-foreground: 240 5% 55%;  /* #8888a0 — secondary text */
+
+    /* Brand */
+    --primary: 243 75% 65%;          /* #6366f1 — indigo-500 (lighter for visibility) */
+    --primary-foreground: 240 15% 7%; /* #0f0f14 — dark text on primary */
+    --secondary: 240 8% 25%;         /* #3a3a42 — subtle lift from background */
+    --secondary-foreground: 45 10% 93%; /* #edece8 */
+    --accent: 188 85% 50%;           /* #06b6d4 — cyan-500 (more vibrant in dark) */
+    --accent-foreground: 240 15% 7%; /* #0f0f14 */
+
+    /* Semantic */
+    --success: 160 75% 45%;          /* #10b981 — emerald-500 (lighter) */
+    --success-foreground: 240 15% 7%; /* #0f0f14 */
+    --warning: 32 90% 55%;           /* #f59e0b — amber-500 (lighter) */
+    --warning-foreground: 240 15% 7%; /* #0f0f14 */
+    --destructive: 0 70% 60%;        /* #ef4444 — red-500 (lighter) */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+
+    /* UI Elements */
+    --border: 240 8% 20%;            /* #2e2e36 — subtle borders in dark */
+    --ring: 243 75% 65%;             /* #6366f1 — focus rings */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar (subtle, warm) */
+@layer utilities {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-muted;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+/* Animations from prototype */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+}
+
+@layer utilities {
+  .fade-up {
+    animation: fadeUp 0.4s ease-out forwards;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .typing-dot {
+    @apply w-1.5 h-1.5 rounded-full bg-muted-foreground inline-block mx-0.5;
+  }
+
+  .typing-dot:nth-child(1) {
+    animation: dotBounce 1s infinite 0s;
+  }
+
+  .typing-dot:nth-child(2) {
+    animation: dotBounce 1s infinite 0.15s;
+  }
+
+  .typing-dot:nth-child(3) {
+    animation: dotBounce 1s infinite 0.3s;
+  }
+}
