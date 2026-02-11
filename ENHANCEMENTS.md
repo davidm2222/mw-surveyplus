@@ -109,6 +109,73 @@ Reduces cold start problem. Blank text fields are intimidating; examples provide
 
 ## Participant Experience Improvements
 
+### Content-Based Follow-Up Decisions (AI-Driven)
+**Status:** Deferred from v1
+**Priority:** High
+**Requested:** User feedback during testing
+
+**Description:**
+Instead of deciding whether to ask follow-ups based on word count and follow-up count, have the AI evaluate the quality and completeness of each response to decide intelligently whether another follow-up is needed.
+
+**Current Behavior:**
+- Interview completion logic uses heuristics: word count + follow-up count
+- E.g., "1 follow-up + 30 words = complete" OR "3 follow-ups max"
+- Simple, predictable, but crude - doesn't understand content
+
+**Proposed Behavior:**
+- After each participant response, AI evaluates: "Did I get the information I need for this research question?"
+- AI decides: continue with targeted follow-up OR move to next question
+- Still respects hard caps (max 3-4 follow-ups) as safety net
+
+**Implementation Approach:**
+```typescript
+// After user response, call evaluation endpoint
+const decision = await fetch('/api/evaluate-response', {
+  body: JSON.stringify({
+    userResponse,
+    researchGoal,
+    currentQuestion,
+    conversationHistory,
+    followUpCount
+  })
+})
+
+// AI returns decision + reasoning
+{
+  shouldContinue: true/false,
+  reasoning: "User mentioned frustration but didn't explain root cause",
+  suggestedFollowUp: "What specifically caused that frustration?"
+}
+
+// Use AI decision but respect hard limits
+shouldMoveToNext =
+  followUpCount >= 3 ||           // Hard cap (safety)
+  !decision.shouldContinue ||     // AI says "I'm satisfied"
+  (followUpCount >= 2 && wordCount < 10) // User giving up
+```
+
+**Benefits:**
+- Much more intelligent, natural conversations
+- Recognizes when enough information has been gathered
+- Stops when beating a dead horse (user repeating themselves)
+- Adapts to conversation quality, not just quantity
+- Better overall data quality
+
+**Trade-offs:**
+- Extra API call per response (~2 seconds latency, 2x cost)
+- More complex logic to maintain
+- Still needs hard caps as safety net (AI could theoretically ask infinite questions)
+
+**Alternative: Hybrid Approach**
+- Use word-count heuristics as default
+- Only call AI evaluation if response is ambiguous (moderate length, moderate follow-up count)
+- Reduces API costs while improving decision quality
+
+**Rationale:**
+User feedback: "I was thinking the AI would actually decide to continue or not based on the content of the response not just the length. Like 'did I get all the info I need for this research?'" This would make interviews feel much more natural and produce higher quality data.
+
+---
+
 ### Voice Input for Participants
 **Status:** v2+ (from original spec)
 **Priority:** Low-Medium
