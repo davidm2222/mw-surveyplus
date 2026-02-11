@@ -119,6 +119,18 @@ export default function InterviewPage() {
     }
   }, [study, interviewStartTime])
 
+  const handleEndInterviewEarly = useCallback(() => {
+    if (!interviewIdRef.current || !interviewStartTime) return
+
+    // Save interview as complete
+    handleCompleteInterview()
+
+    // Show completion screen
+    setIsComplete(true)
+
+    console.log("✅ Interview ended early by participant")
+  }, [handleCompleteInterview, interviewStartTime])
+
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isTyping || !study) return
 
@@ -549,6 +561,15 @@ STYLE:
               className="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground disabled:bg-border disabled:cursor-not-allowed flex items-center justify-center text-xl hover:bg-primary/90 transition-colors"
             >
               ↑
+            </button>
+          </div>
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={handleEndInterviewEarly}
+              disabled={isTyping}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline disabled:opacity-50"
+            >
+              End interview early
             </button>
           </div>
         </div>
