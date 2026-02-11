@@ -109,6 +109,10 @@ Reduces cold start problem. Blank text fields are intimidating; examples provide
 
 ## Participant Experience Improvements
 
+### improved 'UX Interview Expertise' for AI
+**Description:**
+right now the questions the AI asks are OK, but not as good as an expert human interviewer - and it's not clear that the questions are informed not only by responses but by the study's research questions and objectives. We should improve the training of the AI interviewer so that it has the skills of an expert.
+
 ### Content-Based Follow-Up Decisions (AI-Driven)
 **Status:** Deferred from v1
 **Priority:** High
