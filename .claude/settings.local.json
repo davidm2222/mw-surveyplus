@@ -14,7 +14,12 @@
       "Bash(npm run dev:*)",
       "Bash(timeout:*)",
       "Bash(ls:*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(git branch:*)",
+      "Bash(npm install:*)",
+      "Bash(git push:*)",
+      "Bash(vercel --version:*)",
+      "Bash(npm i:*)"
     ]
   }
 }

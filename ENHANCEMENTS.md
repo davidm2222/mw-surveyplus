@@ -6,6 +6,34 @@ This document tracks feature ideas and improvements that are out of scope for v1
 
 ## Setup & Onboarding Improvements
 
+### Persistent Navigation in Setup Wizard
+**Status:** Requested
+**Priority:** High
+
+**Description:**
+When navigating to the Setup tab from Monitor or Report, the StudyTabs navigation disappears, making it impossible to navigate back without using browser back button.
+
+**Current Behavior:**
+- From Monitor/Report, click "Setup" tab
+- Taken to `/study/new?id=X` setup wizard
+- StudyTabs navigation is gone
+- User is stuck in wizard flow, must use browser back to return to Monitor
+
+**Expected Behavior:**
+- Setup tab should show StudyTabs at the top
+- Can navigate freely between Setup/Monitor/Report
+- Setup page should be view-only or clearly editable (not wizard-mode)
+
+**Possible Solutions:**
+1. Add StudyTabs to setup wizard page
+2. Create separate "Edit Study" view that's not wizard-based
+3. Make "Setup" tab link to view-only study details, separate "Edit" button
+
+**Rationale:**
+Navigation should be consistent across all study pages. Users should never feel trapped in a flow.
+
+---
+
 ### Accordion UI for Study Setup
 **Status:** Requested
 **Priority:** Medium
@@ -390,6 +418,45 @@ Export reports in multiple formats.
 
 **Rationale:**
 Different stakeholders prefer different formats. Researchers may want raw data for custom analysis tools.
+
+---
+
+## Critical Bugs
+
+### Interview Completion Not Triggering
+**Status:** BLOCKING
+**Priority:** Critical
+
+**Description:**
+Interviews are not completing properly. The AI says the interview is done, but the completion screen doesn't appear and the interview remains marked as "in_progress" on the monitor page.
+
+**Current Behavior:**
+- AI wraps up the conversation with closing message
+- Interview continues to show chat interface instead of completion screen
+- Monitor page shows interview as "in_progress" instead of "complete"
+- Interview data saves correctly but status never updates to "complete"
+
+**Debug Findings:**
+- On last question (remainingQuestions: 0), shouldMoveToNext stays false
+- Follow-up logic doesn't force completion even when on final question
+- State update `setIsComplete(true)` may not be firing
+- Logic attempted: After 2 follow-ups OR 1 detailed follow-up on last question, should complete
+
+**Console Logs from Failed Interview:**
+```
+🔍 Interview state check: {currentQuestionIndex: 2, totalQuestions: 3, shouldMoveToNext: false, remainingQuestions: 0, isFinished: false}
+💾 Saving interview: {id: 'ssxk4q9regmlgyup1w', messageCount: 24, duration: 219, isFinished: false, status: 'in_progress'}
+🔄 Follow-up #1 on question 3
+```
+
+**Files Affected:**
+- `app/interview/[id]/page.tsx` - Interview completion logic around lines 268-323
+
+**Needs Investigation:**
+- Why shouldMoveToNext logic isn't triggering on last question
+- Whether setIsComplete is actually being called
+- If there's a race condition between state updates
+- Whether the completion detection logic is fundamentally flawed
 
 ---
 

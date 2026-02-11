@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Removed 'output: export' to enable API routes and dynamic features
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
-  // Disable server-side features not compatible with static export
-  trailingSlash: true,
 }
 
 module.exports = nextConfig

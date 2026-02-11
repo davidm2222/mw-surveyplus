@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Study } from "@/types"
 import { StudyCard } from "@/components/features/study-card"
 import { EmptyState } from "@/components/features/empty-state"
 import { Button } from "@/components/ui/button"
+import { useStudies } from "@/hooks/useStudy"
+import { deleteStudy } from "@/lib/storage"
+import { Study } from "@/types"
 
 // Sample data for demonstration
 const SAMPLE_STUDIES: Study[] = [
@@ -68,19 +69,7 @@ const SAMPLE_STUDIES: Study[] = [
 
 export default function HomePage() {
   const router = useRouter()
-  const [studies, setStudies] = useState<Study[]>([])
-
-  // Load studies from localStorage on mount
-  useEffect(() => {
-    const loadedStudies = JSON.parse(localStorage.getItem("studies") || "[]")
-    // Convert date strings back to Date objects
-    const studiesWithDates = loadedStudies.map((s: any) => ({
-      ...s,
-      createdAt: new Date(s.createdAt),
-      updatedAt: new Date(s.updatedAt)
-    }))
-    setStudies(studiesWithDates.length > 0 ? studiesWithDates : SAMPLE_STUDIES)
-  }, [])
+  const { studies, activeStudies, draftStudies, completeStudies, loading, refresh } = useStudies()
 
   const handleCreateStudy = () => {
     router.push("/study/new")
@@ -95,10 +84,18 @@ export default function HomePage() {
     router.push(`/study/new?id=${studyId}`)
   }
 
-  // Separate studies by status
-  const activeStudies = studies.filter(s => s.status === "active")
-  const draftStudies = studies.filter(s => s.status === "draft")
-  const completedStudies = studies.filter(s => s.status === "complete")
+  const handleDeleteStudy = (studyId: string) => {
+    deleteStudy(studyId)
+    refresh()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
@@ -143,6 +140,7 @@ export default function HomePage() {
                       study={study}
                       onView={handleViewStudy}
                       onEdit={handleEditStudy}
+                      onDelete={handleDeleteStudy}
                     />
                   ))}
                 </div>
@@ -165,6 +163,7 @@ export default function HomePage() {
                       study={study}
                       onView={handleViewStudy}
                       onEdit={handleEditStudy}
+                      onDelete={handleDeleteStudy}
                     />
                   ))}
                 </div>
@@ -172,21 +171,22 @@ export default function HomePage() {
             )}
 
             {/* Completed Studies */}
-            {completedStudies.length > 0 && (
+            {completeStudies.length > 0 && (
               <section className="fade-up" style={{ animationDelay: "0.2s" }}>
                 <h2 className="text-xl font-semibold mb-4">
                   Completed
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    ({completedStudies.length})
+                    ({completeStudies.length})
                   </span>
                 </h2>
                 <div className="grid gap-4">
-                  {completedStudies.map((study) => (
+                  {completeStudies.map((study) => (
                     <StudyCard
                       key={study.id}
                       study={study}
                       onView={handleViewStudy}
                       onEdit={handleEditStudy}
+                      onDelete={handleDeleteStudy}
                     />
                   ))}
                 </div>

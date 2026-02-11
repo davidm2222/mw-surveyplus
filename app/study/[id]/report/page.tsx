@@ -2,54 +2,35 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Study, Interview, Report } from "@/types"
+import { Report } from "@/types"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useStudy } from "@/hooks/useStudy"
+import { useInterviews } from "@/hooks/useInterview"
+import { getReport, saveReport } from "@/lib/storage"
+import { generateId } from "@/lib/utils"
+import { StudyTabs } from "@/components/features/study-tabs"
+import { StudyContext } from "@/components/features/study-context"
 
 export default function ReportPage() {
   const params = useParams()
   const router = useRouter()
   const studyId = params.id as string
 
-  const [study, setStudy] = useState<Study | null>(null)
-  const [interviews, setInterviews] = useState<Interview[]>([])
+  const { study, loading: studyLoading } = useStudy(studyId)
+  const { completeInterviews: interviews, stats } = useInterviews(studyId)
+
   const [report, setReport] = useState<Report | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load study and interviews
+  // Load existing report
   useEffect(() => {
-    const studies = JSON.parse(localStorage.getItem("studies") || "[]")
-    const foundStudy = studies.find((s: any) => s.id === studyId)
-    if (foundStudy) {
-      setStudy({
-        ...foundStudy,
-        createdAt: new Date(foundStudy.createdAt),
-        updatedAt: new Date(foundStudy.updatedAt)
-      })
-    }
-
-    const allInterviews = JSON.parse(localStorage.getItem("interviews") || "[]")
-    const studyInterviews = allInterviews
-      .filter((i: any) => i.studyId === studyId && i.status === "complete")
-      .map((i: any) => ({
-        ...i,
-        completedAt: i.completedAt ? new Date(i.completedAt) : undefined,
-        startedAt: i.startedAt ? new Date(i.startedAt) : new Date(i.messages[0]?.timestamp || new Date()),
-        messages: i.messages.map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp)
-        }))
-      }))
-    setInterviews(studyInterviews)
-
-    // Check if report already exists in localStorage
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]")
-    const existingReport = reports.find((r: any) => r.studyId === studyId)
-    if (existingReport) {
-      setReport({
-        ...existingReport,
-        generatedAt: new Date(existingReport.generatedAt)
-      })
+    if (studyId) {
+      const existingReport = getReport(studyId)
+      if (existingReport) {
+        setReport(existingReport)
+      }
     }
   }, [studyId])
 
@@ -91,7 +72,7 @@ export default function ReportPage() {
       const avgSecs = avgSeconds % 60
 
       const newReport: Report = {
-        id: `report-${Date.now()}`,
+        id: generateId(),
         studyId: study.id,
         participantCount: interviews.length,
         avgDuration: `${avgMinutes}:${avgSecs.toString().padStart(2, "0")}`,
@@ -102,12 +83,8 @@ export default function ReportPage() {
         generatedAt: new Date()
       }
 
-      // Save to localStorage
-      const reports = JSON.parse(localStorage.getItem("reports") || "[]")
-      const updatedReports = reports.filter((r: any) => r.studyId !== studyId)
-      updatedReports.push(newReport)
-      localStorage.setItem("reports", JSON.stringify(updatedReports))
-
+      // Save using storage layer
+      saveReport(newReport)
       setReport(newReport)
     } catch (error) {
       console.error("Error generating report:", error)
@@ -115,6 +92,14 @@ export default function ReportPage() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  if (studyLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
   }
 
   if (!study) {
@@ -128,13 +113,7 @@ export default function ReportPage() {
   if (interviews.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-background/95 backdrop-blur">
-          <div className="container mx-auto px-6 py-6 max-w-5xl">
-            <Button variant="ghost" onClick={() => router.push("/")}>
-              ← Dashboard
-            </Button>
-          </div>
-        </header>
+        <StudyTabs study={study} />
         <main className="container mx-auto px-6 py-10 max-w-5xl">
           <div className="rounded-lg border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground mb-4">No completed interviews yet. Run some interviews first!</p>
@@ -149,25 +128,15 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-6 py-6 max-w-5xl">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold text-foreground mb-2">{study.name}</h1>
-              <p className="text-sm text-muted-foreground">Research Report</p>
-            </div>
-            <Button variant="ghost" onClick={() => router.push("/")}>
-              ← Dashboard
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Study Navigation */}
+      <StudyTabs study={study} />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-10 max-w-5xl">
         {!report ? (
-          <div className="rounded-lg border border-border bg-card p-12 text-center space-y-6">
+          <>
+            <StudyContext study={study} />
+            <div className="rounded-lg border border-border bg-card p-12 text-center space-y-6">
             <div>
               <div className="text-4xl font-semibold text-foreground mb-2">{interviews.length}</div>
               <p className="text-muted-foreground">interviews ready for analysis</p>
@@ -201,17 +170,21 @@ export default function ReportPage() {
               This will analyze all {interviews.length} interviews using AI
             </p>
           </div>
+          </>
         ) : (
           <div className="space-y-8 fade-up">
             {/* Meta Info */}
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <span>{report.participantCount} participants</span>
-              <span>Avg duration: {report.avgDuration}</span>
-              <span>Generated {report.generatedAt.toLocaleDateString()}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge>{report.participantCount} participants</Badge>
+              <Badge>Avg {report.avgDuration}</Badge>
+              <Badge variant="secondary">AI-synthesized</Badge>
+              <span className="text-sm text-muted-foreground ml-auto">
+                Generated {report.generatedAt.toLocaleDateString()}
+              </span>
               <button
                 onClick={generateReport}
                 disabled={isGenerating}
-                className="ml-auto text-primary hover:underline"
+                className="text-sm text-primary hover:underline"
               >
                 {isGenerating ? "Regenerating..." : "Regenerate"}
               </button>
@@ -245,9 +218,17 @@ export default function ReportPage() {
                       >
                         <div className="flex items-start justify-between gap-4">
                           <h4 className="font-medium text-foreground">{theme.theme}</h4>
-                          <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          <Badge>
                             {theme.count} of {theme.total}
-                          </span>
+                          </Badge>
+                        </div>
+
+                        {/* Visual proportion bar */}
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${(theme.count / theme.total) * 100}%` }}
+                          />
                         </div>
 
                         {/* Quotes */}

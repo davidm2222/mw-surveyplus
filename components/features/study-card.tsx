@@ -10,9 +10,10 @@ interface StudyCardProps {
   study: Study
   onView?: (studyId: string) => void
   onEdit?: (studyId: string) => void
+  onDelete?: (studyId: string) => void
 }
 
-export function StudyCard({ study, onView, onEdit }: StudyCardProps) {
+export function StudyCard({ study, onView, onEdit, onDelete }: StudyCardProps) {
   const statusVariant = {
     draft: "secondary" as const,
     active: "default" as const,
@@ -81,8 +82,23 @@ export function StudyCard({ study, onView, onEdit }: StudyCardProps) {
       </CardContent>
 
       <CardFooter className="border-t border-border pt-4 flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">
-          Updated {timeAgo(study.updatedAt)}
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-muted-foreground">
+            Updated {timeAgo(study.updatedAt)}
+          </div>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (confirm(`Are you sure you want to delete "${study.name}"? This will delete all interviews and reports. This cannot be undone.`)) {
+                  onDelete(study.id)
+                }
+              }}
+              className="text-xs text-red-600 hover:text-red-700 hover:underline"
+            >
+              Delete
+            </button>
+          )}
         </div>
         <div className="flex gap-2">
           {study.status === "draft" ? (

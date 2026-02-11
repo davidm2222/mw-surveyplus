@@ -2,52 +2,37 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Study, Interview } from "@/types"
+import { Interview } from "@/types"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useStudy } from "@/hooks/useStudy"
+import { useInterviews } from "@/hooks/useInterview"
+import { saveInterview } from "@/lib/storage"
+import { StudyTabs } from "@/components/features/study-tabs"
+import { StudyContext } from "@/components/features/study-context"
 
 export default function MonitorPage() {
   const params = useParams()
   const router = useRouter()
   const studyId = params.id as string
 
-  const [study, setStudy] = useState<Study | null>(null)
-  const [interviews, setInterviews] = useState<Interview[]>([])
+  const { study, loading: studyLoading } = useStudy(studyId)
+  const { interviews, stats, refresh, deleteInterview } = useInterviews(studyId)
+
   const [expandedInterviews, setExpandedInterviews] = useState<Set<string>>(new Set())
   const [loadingSummaries, setLoadingSummaries] = useState<Set<string>>(new Set())
+  const [generatingReport, setGeneratingReport] = useState(false)
 
-  // Load study and interviews
+  // Generate summaries for interviews that don't have one
   useEffect(() => {
-    const studies = JSON.parse(localStorage.getItem("studies") || "[]")
-    const foundStudy = studies.find((s: any) => s.id === studyId)
-    if (foundStudy) {
-      setStudy({
-        ...foundStudy,
-        createdAt: new Date(foundStudy.createdAt),
-        updatedAt: new Date(foundStudy.updatedAt)
+    if (interviews.length > 0 && study) {
+      interviews.forEach((interview: Interview) => {
+        if (!interview.aiSummary && interview.status === "complete" && !loadingSummaries.has(interview.id)) {
+          generateSummary(interview)
+        }
       })
     }
-
-    const allInterviews = JSON.parse(localStorage.getItem("interviews") || "[]")
-    const studyInterviews = allInterviews
-      .filter((i: any) => i.studyId === studyId)
-      .map((i: any) => ({
-        ...i,
-        completedAt: i.completedAt ? new Date(i.completedAt) : undefined,
-        startedAt: i.startedAt ? new Date(i.startedAt) : new Date(i.messages[0]?.timestamp || new Date()),
-        messages: i.messages.map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp)
-        }))
-      }))
-    setInterviews(studyInterviews)
-
-    // Generate summaries for interviews that don't have one
-    studyInterviews.forEach((interview: Interview) => {
-      if (!interview.aiSummary && interview.status === "complete") {
-        generateSummary(interview)
-      }
-    })
-  }, [studyId])
+  }, [interviews.length])
 
   const generateSummary = async (interview: Interview) => {
     setLoadingSummaries(prev => new Set(prev).add(interview.id))
@@ -72,17 +57,14 @@ export default function MonitorPage() {
       const data = await response.json()
       const summary = data.summary
 
-      // Update interview with summary
-      const allInterviews = JSON.parse(localStorage.getItem("interviews") || "[]")
-      const updatedInterviews = allInterviews.map((i: any) =>
-        i.id === interview.id ? { ...i, aiSummary: summary } : i
-      )
-      localStorage.setItem("interviews", JSON.stringify(updatedInterviews))
+      // Update interview with summary using storage layer
+      saveInterview({
+        ...interview,
+        aiSummary: summary
+      })
 
-      // Update local state
-      setInterviews(prev =>
-        prev.map(i => (i.id === interview.id ? { ...i, aiSummary: summary } : i))
-      )
+      // Refresh interviews to show updated summary
+      refresh()
     } catch (error) {
       console.error("Error generating summary:", error)
     } finally {
@@ -112,9 +94,34 @@ export default function MonitorPage() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  const avgDuration = interviews.length > 0
-    ? Math.floor(interviews.reduce((sum, i) => sum + i.duration, 0) / interviews.length)
-    : 0
+  const copyShareableLink = () => {
+    const link = `${window.location.origin}/interview/${studyId}`
+    navigator.clipboard.writeText(link)
+    alert("Interview link copied to clipboard!")
+  }
+
+  const handleGenerateReport = async () => {
+    if (stats.complete < 3) {
+      alert("You need at least 3 completed interviews to generate a report")
+      return
+    }
+
+    router.push(`/study/${studyId}/report`)
+  }
+
+  const handleDeleteInterview = (interviewId: string) => {
+    if (confirm("Are you sure you want to delete this interview? This cannot be undone.")) {
+      deleteInterview(interviewId)
+    }
+  }
+
+  if (studyLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
 
   if (!study) {
     return (
@@ -126,47 +133,67 @@ export default function MonitorPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-6 py-6 max-w-5xl">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold text-foreground mb-2">{study.name}</h1>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {study.researchGoal}
-              </p>
-            </div>
-            <Button variant="ghost" onClick={() => router.push("/")}>
-              ← Dashboard
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Study Navigation */}
+      <StudyTabs study={study} />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-10 max-w-5xl">
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        {/* Study Context */}
+        <StudyContext study={study} />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="text-3xl font-semibold text-foreground mb-1">
-              {interviews.length}
+              {stats.complete}
             </div>
-            <div className="text-sm text-muted-foreground">Total Interviews</div>
+            <div className="text-sm text-muted-foreground">Completed</div>
           </div>
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="text-3xl font-semibold text-foreground mb-1">
-              {formatDuration(avgDuration)}
+              {formatDuration(stats.avgDuration)}
             </div>
-            <div className="text-sm text-muted-foreground">Average Duration</div>
+            <div className="text-sm text-muted-foreground">Avg Duration</div>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-6">
+            <div className="text-3xl font-semibold text-foreground mb-1">
+              {stats.completionRate}%
+            </div>
+            <div className="text-sm text-muted-foreground">Completion Rate</div>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-6">
+            <div className="mb-1">
+              <Badge variant={stats.complete >= 3 ? "success" : "default"}>
+                {stats.complete >= 3 ? "Ready" : "In Progress"}
+              </Badge>
+            </div>
+            <div className="text-sm text-muted-foreground">Report Status</div>
+          </div>
+        </div>
+
+        {/* Shareable Link */}
+        <div className="rounded-lg border border-border bg-card p-6 mb-8">
+          <h3 className="font-medium text-foreground mb-3">Shareable Interview Link</h3>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={`${typeof window !== "undefined" ? window.location.origin : ""}/interview/${studyId}`}
+              readOnly
+              className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground"
+            />
+            <Button onClick={copyShareableLink}>
+              Copy Link
+            </Button>
           </div>
         </div>
 
         {/* Interviews List */}
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">Interviews</h2>
-            {interviews.length > 0 && (
-              <Button onClick={() => router.push(`/study/${studyId}/report`)}>
+            <h2 className="text-xl font-semibold text-foreground">
+              Interviews ({stats.complete} complete)
+            </h2>
+            {stats.complete >= 3 && (
+              <Button onClick={handleGenerateReport}>
                 Generate Report →
               </Button>
             )}
@@ -174,17 +201,10 @@ export default function MonitorPage() {
 
           {interviews.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-12 text-center">
-              <p className="text-muted-foreground mb-4">No interviews yet</p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const link = `${window.location.origin}/interview/${studyId}`
-                  navigator.clipboard.writeText(link)
-                  alert("Interview link copied!")
-                }}
-              >
-                Copy Interview Link
-              </Button>
+              <p className="text-lg font-medium text-foreground mb-2">No interviews yet</p>
+              <p className="text-muted-foreground mb-6">
+                Share the interview link above to start collecting responses
+              </p>
             </div>
           ) : (
             interviews.map((interview, index) => {
@@ -243,6 +263,14 @@ export default function MonitorPage() {
                         </p>
                       )}
                     </div>
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => handleDeleteInterview(interview.id)}
+                      className="text-sm text-red-600 hover:text-red-700 hover:underline"
+                    >
+                      Delete Interview
+                    </button>
                   </div>
 
                   {/* Transcript (Expandable) */}

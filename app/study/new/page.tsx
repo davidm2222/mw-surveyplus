@@ -1,27 +1,116 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Textarea, Button } from "@/components/ui"
-import { generateId } from "@/lib/utils"
-
-interface StudyData {
-  id: string
-  name: string
-  goal: string
-  researchQuestions: string[]
-  questionFramework: string[]
-  status: "draft" | "active"
-  createdAt: Date
-}
+import { useStudy } from "@/hooks/useStudy"
+import { Study } from "@/types"
 
 export default function NewStudyPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editingId = searchParams.get("id")
+
+  const { study: existingStudy, saveStudy, error: studyError } = useStudy(editingId || undefined)
+
   const [activeTier, setActiveTier] = useState(0)
+  const [studyId, setStudyId] = useState<string | null>(editingId)
   const [name, setName] = useState("")
   const [goal, setGoal] = useState("")
   const [researchQuestions, setResearchQuestions] = useState(["", "", ""])
   const [questionFramework, setQuestionFramework] = useState(["", "", "", ""])
+  const [saving, setSaving] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const savingRef = useRef(false)
+
+  // Load existing study data if editing (only on mount)
+  useEffect(() => {
+    if (existingStudy && !name && !goal) {
+      setName(existingStudy.name)
+      setGoal(existingStudy.researchGoal)
+      setResearchQuestions(existingStudy.researchQuestions.length > 0 ? existingStudy.researchQuestions : ["", "", ""])
+      setQuestionFramework(existingStudy.questionFramework.length > 0 ? existingStudy.questionFramework : ["", "", "", ""])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingStudy?.id]) // Only run when study ID changes, not on every update
+
+  // Auto-save draft whenever data changes
+  const handleSaveDraft = useCallback(() => {
+    if (savingRef.current) return
+
+    try {
+      savingRef.current = true
+      setSaving(true)
+      const filledQuestions = researchQuestions.filter(q => q.trim())
+      const filledPrompts = questionFramework.filter(q => q.trim())
+
+      const id = saveStudy({
+        id: studyId || undefined,
+        name: name.trim() || "Untitled Study",
+        researchGoal: goal.trim(),
+        researchQuestions: filledQuestions,
+        questionFramework: filledPrompts,
+        status: "draft",
+      })
+
+      if (!studyId) {
+        setStudyId(id)
+      }
+    } catch (err) {
+      console.error("Auto-save failed:", err)
+    } finally {
+      savingRef.current = false
+      setSaving(false)
+    }
+  }, [name, goal, researchQuestions, questionFramework, studyId, saveStudy])
+
+  useEffect(() => {
+    // Only auto-save if there's meaningful content (not just empty arrays)
+    const hasContent = name.trim() || goal.trim() ||
+                       researchQuestions.some(q => q.trim()) ||
+                       questionFramework.some(q => q.trim())
+
+    if (!hasContent) return
+
+    const autoSave = setTimeout(() => {
+      handleSaveDraft()
+    }, 1500) // Debounce by 1.5 seconds to avoid conflicts
+
+    return () => clearTimeout(autoSave)
+  }, [name, goal, researchQuestions, questionFramework, handleSaveDraft])
+
+  // Validation function
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {}
+
+    if (!name.trim()) {
+      errors.name = "Study name is required"
+    }
+
+    if (!goal.trim()) {
+      errors.goal = "Research goal is required"
+    } else if (goal.trim().length < 10) {
+      errors.goal = "Research goal must be at least 10 characters"
+    }
+
+    const filledQuestions = researchQuestions.filter(q => q.trim())
+    if (filledQuestions.length < 1) {
+      errors.questions = "Add at least 1 research question"
+    } else if (filledQuestions.length > 6) {
+      errors.questions = "Maximum 6 research questions allowed"
+    }
+
+    const filledPrompts = questionFramework.filter(q => q.trim())
+    if (filledPrompts.length < 1) {
+      errors.framework = "Add at least 1 interview prompt"
+    } else if (filledPrompts.length > 8) {
+      errors.framework = "Maximum 8 interview prompts allowed"
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const updateQuestion = (index: number, value: string) => {
     const updated = [...researchQuestions]
@@ -30,10 +119,12 @@ export default function NewStudyPage() {
   }
 
   const addQuestion = () => {
+    if (researchQuestions.length >= 6) return
     setResearchQuestions([...researchQuestions, ""])
   }
 
   const removeQuestion = (index: number) => {
+    if (researchQuestions.length <= 1) return
     setResearchQuestions(researchQuestions.filter((_, i) => i !== index))
   }
 
@@ -44,57 +135,70 @@ export default function NewStudyPage() {
   }
 
   const addPrompt = () => {
+    if (questionFramework.length >= 8) return
     setQuestionFramework([...questionFramework, ""])
   }
 
   const removePrompt = (index: number) => {
+    if (questionFramework.length <= 1) return
     setQuestionFramework(questionFramework.filter((_, i) => i !== index))
   }
 
+  // Drag and drop handlers for framework questions
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) return
+
+    const items = [...questionFramework]
+    const draggedItem = items[draggedIndex]
+    items.splice(draggedIndex, 1)
+    items.splice(dropIndex, 0, draggedItem)
+
+    setQuestionFramework(items)
+    setDraggedIndex(null)
+  }
+
   const handleLaunch = () => {
-    // Basic validation
-    if (!name.trim()) {
-      alert("Please enter a study name")
-      return
-    }
-    if (!goal.trim() || goal.trim().length < 50) {
-      alert("Research goal must be at least 50 characters")
-      setActiveTier(0)
-      return
-    }
-
-    const filledQuestions = researchQuestions.filter(q => q.trim())
-    if (filledQuestions.length === 0) {
-      alert("Please add at least one research question")
-      setActiveTier(1)
+    // Validate form
+    if (!validateForm()) {
+      // Navigate to the first tier with errors
+      if (validationErrors.name || validationErrors.goal) {
+        setActiveTier(0)
+      } else if (validationErrors.questions) {
+        setActiveTier(1)
+      } else if (validationErrors.framework) {
+        setActiveTier(2)
+      }
       return
     }
 
-    const filledPrompts = questionFramework.filter(p => p.trim())
-    if (filledPrompts.length === 0) {
-      alert("Please add at least one question prompt")
-      setActiveTier(2)
-      return
+    try {
+      const filledQuestions = researchQuestions.filter(q => q.trim())
+      const filledPrompts = questionFramework.filter(q => q.trim())
+
+      const id = saveStudy({
+        id: studyId || undefined,
+        name: name.trim(),
+        researchGoal: goal.trim(),
+        researchQuestions: filledQuestions,
+        questionFramework: filledPrompts,
+        status: "active",
+      })
+
+      // Navigate to monitor page
+      router.push(`/study/${id}/monitor`)
+    } catch (err) {
+      console.error("Failed to launch study:", err)
+      alert("Failed to save study. Please try again.")
     }
-
-    // Create study
-    const study: StudyData = {
-      id: generateId(),
-      name: name.trim(),
-      goal: goal.trim(),
-      researchQuestions: filledQuestions,
-      questionFramework: filledPrompts,
-      status: "active",
-      createdAt: new Date(),
-    }
-
-    // Save to localStorage
-    const studies = JSON.parse(localStorage.getItem("studies") || "[]")
-    studies.push(study)
-    localStorage.setItem("studies", JSON.stringify(studies))
-
-    // Redirect to dashboard
-    router.push("/")
   }
 
   // Collapsed tier preview
@@ -154,16 +258,26 @@ export default function NewStudyPage() {
 
         {/* Study Name */}
         <div className="mb-6 fade-up" style={{ animationDelay: "0.05s" }}>
-          <label className="text-sm font-medium text-foreground mb-2 block">
-            Study Name
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-foreground">
+              Study Name
+            </label>
+            {saving && (
+              <span className="text-xs text-muted-foreground">Saving...</span>
+            )}
+          </div>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Customer Onboarding Research"
-            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
+            className={`w-full rounded-lg border ${
+              validationErrors.name ? "border-red-500" : "border-border"
+            } bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary`}
           />
+          {validationErrors.name && (
+            <p className="mt-1 text-sm text-red-500">{validationErrors.name}</p>
+          )}
         </div>
 
         {/* Tiers */}
@@ -196,7 +310,11 @@ export default function NewStudyPage() {
                 rows={4}
                 maxCharCount={500}
                 showCharCount
+                className={validationErrors.goal ? "border-red-500" : ""}
               />
+              {validationErrors.goal && (
+                <p className="mt-1 text-sm text-red-500">{validationErrors.goal}</p>
+              )}
 
               <div className="mt-3 rounded-lg bg-muted/30 p-3 text-sm text-muted-foreground">
                 💡 A strong goal is specific enough to guide analysis but broad enough for unexpected discoveries.
@@ -251,9 +369,22 @@ export default function NewStudyPage() {
                 ))}
               </div>
 
-              <Button variant="ghost" size="sm" onClick={addQuestion} className="mt-3">
-                + Add Question
-              </Button>
+              <div className="flex items-center justify-between mt-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={addQuestion}
+                  disabled={researchQuestions.length >= 6}
+                >
+                  + Add Question
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {researchQuestions.filter(q => q.trim()).length} of 1-6 questions
+                </span>
+              </div>
+              {validationErrors.questions && (
+                <p className="mt-2 text-sm text-red-500">{validationErrors.questions}</p>
+              )}
             </div>
           ) : (
             <CollapsedTier num={2} title="Research Questions" content={researchQuestions} isList />
@@ -276,9 +407,22 @@ export default function NewStudyPage() {
                 </span>
               </div>
 
+              <div className="mb-3 text-xs text-muted-foreground">
+                💡 Drag to reorder questions
+              </div>
+
               <div className="space-y-3">
                 {questionFramework.map((prompt, i) => (
-                  <div key={i} className="flex gap-3 items-start">
+                  <div
+                    key={i}
+                    draggable
+                    onDragStart={() => handleDragStart(i)}
+                    onDragOver={(e) => handleDragOver(e, i)}
+                    onDrop={(e) => handleDrop(e, i)}
+                    className={`flex gap-3 items-start transition-opacity ${
+                      draggedIndex === i ? "opacity-50" : "opacity-100"
+                    } cursor-move`}
+                  >
                     <div className="flex-shrink-0 w-8 h-10 flex items-center justify-center">
                       <span className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-sm font-semibold">
                         Q{i + 1}
@@ -304,9 +448,22 @@ export default function NewStudyPage() {
                 ))}
               </div>
 
-              <Button variant="ghost" size="sm" onClick={addPrompt} className="mt-3">
-                + Add Prompt
-              </Button>
+              <div className="flex items-center justify-between mt-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={addPrompt}
+                  disabled={questionFramework.length >= 8}
+                >
+                  + Add Prompt
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {questionFramework.filter(q => q.trim()).length} of 1-8 prompts
+                </span>
+              </div>
+              {validationErrors.framework && (
+                <p className="mt-2 text-sm text-red-500">{validationErrors.framework}</p>
+              )}
             </div>
           ) : (
             <CollapsedTier num={3} title="Question Framework" content={questionFramework} isList />
@@ -330,11 +487,25 @@ export default function NewStudyPage() {
               </Button>
             ) : (
               <Button onClick={handleLaunch}>
-                Launch Study
+                Launch Study →
               </Button>
             )}
           </div>
         </div>
+
+        {/* Show errors at bottom if validation fails */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200">
+            <p className="text-sm font-medium text-red-800 mb-2">
+              Please fix the following issues:
+            </p>
+            <ul className="text-sm text-red-700 space-y-1">
+              {Object.values(validationErrors).map((error, i) => (
+                <li key={i}>• {error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )
