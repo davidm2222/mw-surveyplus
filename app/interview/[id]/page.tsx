@@ -179,11 +179,11 @@ export default function InterviewPage() {
 
       let shouldMoveToNext = false
       if (isOnLastQuestion) {
-        // On last question: complete after 3 follow-ups OR 2+ follow-ups with decent response
+        // On last question: complete after 3 follow-ups OR earlier with good responses
         shouldMoveToNext =
-          followUpCount >= MAX_LAST_QUESTION_FOLLOWUPS || // Hard cap - MUST complete
-          (followUpCount >= 2 && wordCount >= 20) ||       // 2 follow-ups + decent response
-          (followUpCount >= 1 && wordCount >= 40)          // 1 detailed follow-up
+          followUpCount >= MAX_LAST_QUESTION_FOLLOWUPS || // Hard cap at 3 - MUST complete
+          (followUpCount >= 2 && wordCount >= 15) ||       // 2 follow-ups + any real response
+          (followUpCount >= 1 && wordCount >= 30)          // 1 follow-up + detailed response (lowered from 40)
       } else {
         // On regular questions: standard follow-up logic
         shouldMoveToNext =
