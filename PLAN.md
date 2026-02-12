@@ -257,19 +257,23 @@ Complete end-to-end prototype using localStorage for local demos and testing.
 
 ## Known Issues & Next Steps
 
-### Critical: Interview Completion Flow
-**Status:** In Progress (manual escape hatch added)
+### 🔴 #1 PRIORITY: Interview Auto-Completion Broken
+**Status:** Critical - Manual escape hatch exists but not a real solution
 
 **Issue:**
-Interviews sometimes don't auto-complete properly when AI wraps up conversation.
+Interviews frequently don't auto-complete when the AI signals it's done. The AI says "Thank you for your time" or similar wrap-up language in the chat, but the interview stays in `in_progress` state instead of marking complete.
 
-**Workaround:**
-Manual "End Interview" button added as escape hatch for participants.
+**Current Workaround:**
+Manual "End Interview" button added as escape hatch. This works but participants shouldn't need it.
+
+**Root Cause:**
+Completion detection logic in `app/interview/[id]/page.tsx` isn't properly recognizing when the AI has finished the interview.
 
 **Next Steps:**
-- [ ] Review completion detection logic
-- [ ] Improve AI decision-making for when to end
-- [ ] Test edge cases (very short responses, participant leaves mid-interview)
+- [ ] Debug completion detection logic - why isn't the AI's "done" signal being caught?
+- [ ] Review the instruction/decision flow sent to the AI
+- [ ] Test: AI says "we're done" → should immediately show completion screen
+- [ ] Remove manual button once auto-completion is reliable
 
 ### Polish Tasks
 - [ ] Toast notifications for user actions
