@@ -184,7 +184,7 @@ export default function ReportPage() {
               <button
                 onClick={generateReport}
                 disabled={isGenerating}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary dark:text-indigo-400 hover:underline"
               >
                 {isGenerating ? "Regenerating..." : "Regenerate"}
               </button>
@@ -192,18 +192,18 @@ export default function ReportPage() {
 
             {/* Executive Summary */}
             <section className="rounded-lg border border-border bg-card p-8">
-              <h2 className="text-xl font-semibold text-foreground mb-4">Executive Summary</h2>
+              <h2 className="font-serif text-xl font-normal text-foreground mb-4">Executive Summary</h2>
               <p className="text-foreground leading-relaxed">{report.executiveSummary}</p>
             </section>
 
             {/* Findings */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-semibold text-foreground">Findings</h2>
+              <h2 className="font-serif text-2xl font-normal text-foreground">Findings</h2>
 
               {report.findings.map((finding, idx) => (
                 <div key={idx} className="rounded-lg border border-border bg-card p-8 space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-3">
+                    <h3 className="font-serif text-lg font-normal text-foreground mb-3">
                       {finding.researchQuestion}
                     </h3>
                     <p className="text-foreground leading-relaxed">{finding.answer}</p>
@@ -254,7 +254,7 @@ export default function ReportPage() {
             {/* Unexpected Insights */}
             {report.unexpectedInsights.length > 0 && (
               <section className="rounded-lg border border-border bg-card p-8">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Unexpected Insights</h2>
+                <h2 className="font-serif text-xl font-normal text-foreground mb-4">Unexpected Insights</h2>
                 <ul className="space-y-2">
                   {report.unexpectedInsights.map((insight, idx) => (
                     <li key={idx} className="flex gap-3">
@@ -269,7 +269,7 @@ export default function ReportPage() {
             {/* Further Research */}
             {report.furtherResearch.length > 0 && (
               <section className="rounded-lg border border-border bg-card p-8">
-                <h2 className="text-xl font-semibold text-foreground mb-4">Further Research</h2>
+                <h2 className="font-serif text-xl font-normal text-foreground mb-4">Further Research</h2>
                 <ul className="space-y-2">
                   {report.furtherResearch.map((item, idx) => (
                     <li key={idx} className="flex gap-3">

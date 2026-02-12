@@ -1,6 +1,6 @@
 # SurveyPlus — Future Enhancements
 
-This document tracks feature ideas and improvements that are out of scope for v1 but represent natural extensions of the product.
+This document tracks feature ideas and improvements that are **out of scope for Phase 1 MVP** but represent natural extensions of the product. These may be built in Phase 2+ depending on user needs and priorities.
 
 ---
 
@@ -109,9 +109,18 @@ Reduces cold start problem. Blank text fields are intimidating; examples provide
 
 ## Participant Experience Improvements
 
-### improved 'UX Interview Expertise' for AI
+### Improved AI Interview Expertise
+**Status:** Partially addressed in Phase 1
+**Priority:** Medium
+
 **Description:**
-right now the questions the AI asks are OK, but not as good as an expert human interviewer - and it's not clear that the questions are informed not only by responses but by the study's research questions and objectives. We should improve the training of the AI interviewer so that it has the skills of an expert.
+Continue improving the AI interviewer's quality to match expert human interviewers. While initial improvements were made, there's room for the AI to better demonstrate how questions are informed by the study's research questions and objectives.
+
+**Possible improvements:**
+- More sophisticated context awareness across the full conversation
+- Better balance between following framework and exploring unexpected insights
+- Clearer connection between participant responses and research goals
+- More natural transitions between topics
 
 ### Content-Based Follow-Up Decisions (AI-Driven)
 **Status:** Deferred from v1
@@ -492,44 +501,6 @@ Different stakeholders prefer different formats. Researchers may want raw data f
 
 ---
 
-## Critical Bugs
-
-### Interview Completion Not Triggering
-**Status:** BLOCKING
-**Priority:** Critical
-
-**Description:**
-Interviews are not completing properly. The AI says the interview is done, but the completion screen doesn't appear and the interview remains marked as "in_progress" on the monitor page.
-
-**Current Behavior:**
-- AI wraps up the conversation with closing message
-- Interview continues to show chat interface instead of completion screen
-- Monitor page shows interview as "in_progress" instead of "complete"
-- Interview data saves correctly but status never updates to "complete"
-
-**Debug Findings:**
-- On last question (remainingQuestions: 0), shouldMoveToNext stays false
-- Follow-up logic doesn't force completion even when on final question
-- State update `setIsComplete(true)` may not be firing
-- Logic attempted: After 2 follow-ups OR 1 detailed follow-up on last question, should complete
-
-**Console Logs from Failed Interview:**
-```
-🔍 Interview state check: {currentQuestionIndex: 2, totalQuestions: 3, shouldMoveToNext: false, remainingQuestions: 0, isFinished: false}
-💾 Saving interview: {id: 'ssxk4q9regmlgyup1w', messageCount: 24, duration: 219, isFinished: false, status: 'in_progress'}
-🔄 Follow-up #1 on question 3
-```
-
-**Files Affected:**
-- `app/interview/[id]/page.tsx` - Interview completion logic around lines 268-323
-
-**Needs Investigation:**
-- Why shouldMoveToNext logic isn't triggering on last question
-- Whether setIsComplete is actually being called
-- If there's a race condition between state updates
-- Whether the completion detection logic is fundamentally flawed
-
----
 
 ## Miscellaneous
 

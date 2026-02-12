@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Textarea, Button } from "@/components/ui"
+import { ThemeToggle } from "@/components/features/theme-toggle"
 import { useStudy } from "@/hooks/useStudy"
 import { Study } from "@/types"
 
@@ -248,12 +249,17 @@ export default function NewStudyPage() {
       <div className="mx-auto max-w-3xl px-6 py-8">
         {/* Header */}
         <div className="mb-8 fade-up">
-          <h1 className="text-3xl font-semibold text-foreground mb-2">
-            Create New Study
-          </h1>
-          <p className="text-muted-foreground">
-            Define your research framework. Each tier informs the next.
-          </p>
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
+              <h1 className="font-serif text-3xl font-normal text-foreground mb-2">
+                Study Setup
+              </h1>
+              <p className="text-muted-foreground">
+                Define your research framework. Each tier informs the next.
+              </p>
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Study Name */}

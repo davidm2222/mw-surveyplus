@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useStudy } from "@/hooks/useStudy"
+import { ThemeToggle } from "@/components/features/theme-toggle"
 import { Message, Interview } from "@/types"
 import { saveInterview, getInterview } from "@/lib/storage"
 import { generateId } from "@/lib/utils"
@@ -458,9 +459,12 @@ STYLE:
   if (!hasStarted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="absolute top-6 right-6">
+          <ThemeToggle />
+        </div>
         <div className="max-w-md w-full bg-card rounded-lg border border-border p-8 space-y-6 fade-up">
           <div className="text-center space-y-3">
-            <h1 className="text-2xl font-semibold text-foreground">{study.name}</h1>
+            <h1 className="font-serif text-2xl font-normal text-foreground">{study.name}</h1>
             <p className="text-muted-foreground">
               You&rsquo;ll be chatting with an AI interviewer about your experience. This should take about 5-10 minutes.
             </p>
@@ -490,6 +494,7 @@ STYLE:
         <h2 className="font-medium text-foreground">{study.name}</h2>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>Question {Math.min(currentQuestionIndex + 1, study.questionFramework.length)} of {study.questionFramework.length}</span>
+          <ThemeToggle />
         </div>
       </div>
 
@@ -532,7 +537,7 @@ STYLE:
       {isComplete ? (
         <div className="border-t border-border bg-card px-6 py-8 text-center fade-up">
           <div className="text-4xl mb-3">✓</div>
-          <p className="text-lg font-medium text-foreground mb-2">Interview Complete</p>
+          <p className="font-serif text-lg font-normal text-foreground mb-2">Interview Complete</p>
           <p className="text-sm text-muted-foreground mb-6">Thank you for participating!</p>
           <a
             href="/"

@@ -1,449 +1,376 @@
 # SurveyPlus — Build Plan & Progress
 
 **Product:** AI-moderated research interviews at scale
-**Stack:** Next.js 14, TypeScript, Tailwind CSS, Firebase (later), Claude API
-**Status:** 🚧 In Progress
-
-**Build Philosophy:** Horizontal slices - working end-to-end at each phase, then iterative polish
+**Stack:** Next.js 14, TypeScript, Tailwind CSS, Claude API, localStorage (Phase 1)
+**Status:** 🚀 Phase 1 MVP Near Complete
 
 ---
 
 ## 📊 Overall Progress
 
-**Phase 1: Working MVP (End-to-End)**
-- [x] Project Setup (100%)
+**Phase 1: Working MVP (localStorage)**
+- [x] Project Setup & Design System (100%)
+- [x] Data Layer (localStorage + hooks) (100%)
 - [x] Dashboard (100%)
-- [ ] Study Setup (Simple, 1 page) (50%)
-- [ ] Interview Page (Basic chat + Claude API) (0%)
-- [ ] Monitor (View interviews) (0%)
-- [ ] Report (Display analysis) (0%)
+- [x] Study Setup (100%)
+- [x] Interview Experience (95%)
+- [x] Monitor Page (100%)
+- [x] Report Page (100%)
+- [x] API Routes (100%)
+- [ ] Bug Fixes & Polish (90%)
 
-**Phase 2: Polish & Features**
+**Phase 1 Completion: ~95%**
+
+**Phase 2: Production (Firebase + Auth)**
 - [ ] Firebase Integration
 - [ ] Authentication
-- [ ] Advanced Features (see Phase 2 section)
-
-**Current Phase Completion: ~30%**
-**Overall Completion: ~15%**
+- [ ] Advanced Features
 
 ---
 
-## Build Philosophy: Horizontal Slices
+## Phase 1: Working MVP ✅
 
-**Phase 1 Goal:** Working end-to-end prototype in localStorage
-- ✅ Create study → conduct interview → see results
-- ✅ Test with real Claude API
-- ✅ 3-5 files per feature
-- ✅ Can demo the full flow
+### Goal
+Complete end-to-end prototype using localStorage for local demos and testing.
 
-**Phase 2 Goal:** Production-ready polish
-- Add Firebase for persistence
-- Add authentication
-- Add advanced features (auto-save, validation, export, etc.)
-- Refactor and optimize
+### Architecture Decisions
 
-**Phase 3 Goal:** Scale & enhance
-- Advanced AI features
-- Team collaboration
-- Analytics
-- Performance optimization
+**Data Storage:** localStorage
+- Simple, no backend setup needed for demos
+- Studies, interviews, reports stored in browser
+- Migration path to Firebase later without changing component APIs
 
----
+**Participant Access:** URL-based routing
+- `/interview/[studyId]` for shareable links
+- No auth required, reduces friction
 
-## Phase 1: Working MVP End-to-End 🚧
+**API Integration:** Next.js API routes
+- Server-side Claude API calls
+- API key secure in .env.local
 
-### What We're Building
-A complete but simple version of the entire user journey:
-1. **Dashboard** → List studies, create new study
-2. **Study Setup** → Simple accordion form (goal, questions, framework)
-3. **Interview** → Chat interface with Claude API
-4. **Monitor** → View completed interviews
-5. **Report** → AI-generated analysis
-
-### What We're Skipping (for Phase 1)
-- ❌ Firebase (use localStorage)
-- ❌ Authentication (single user)
-- ❌ Auto-save drafts
-- ❌ AI suggestions during setup
-- ❌ Complex validation
-- ❌ Metadata fields
-- ❌ Preview mode
-- ❌ Export features
-- ❌ Perfect error handling
-
-**Success Criteria:** Can create study → run interview → see report in 10 minutes
+**State Management:** React hooks + localStorage
+- Custom hooks: `useLocalStorage`, `useStudy`, `useInterview`
 
 ---
 
-## 1. Foundation & Setup ✅
+## Phase 1 Components
 
-### 1.1 Project Scaffold
+### 1. Foundation ✅
+
+**Project Setup**
 - [x] Next.js 14 with App Router
 - [x] TypeScript configuration
-- [x] Tailwind CSS setup
-- [x] Design system implementation (colors, typography, spacing)
-- [x] Global styles with dark mode support
-- [x] Base animations (fade-up, fade-in, typing dots)
+- [x] Tailwind CSS + design system
+- [x] Dark mode support
+- [x] Base animations
 
-### 1.2 Core Utilities
-- [x] `lib/utils.ts` - Helper functions (cn, formatDate, timeAgo, etc.)
-- [x] `types/index.ts` - TypeScript type definitions
-- [x] Design tokens in globals.css
+**Core Utilities**
+- [x] `lib/utils.ts` - Helper functions
+- [x] `lib/storage.ts` - localStorage abstraction with CRUD
+- [x] `types/index.ts` - TypeScript definitions
 
-### 1.3 UI Component Library
-- [x] Button component (5 variants, 3 sizes)
-- [x] Card component system
-- [x] Badge component
-- [ ] Input component (text, textarea)
-- [ ] Select/Dropdown component
-- [ ] Modal/Dialog component
-- [ ] Progress indicator component
-- [ ] Toast/notification system
-- [ ] Loading states & skeletons
+**UI Components**
+- [x] Button (5 variants, 3 sizes)
+- [x] Card system
+- [x] Badge
+- [x] Input & Textarea
+- [x] Progress indicators
+- [x] Loading states
 
 ---
 
-## 2. Dashboard (Study Management Hub) ✅
+### 2. Data Layer ✅
 
-### 2.1 Layout & Structure
-- [x] Header with branding and CTA
+**Files Created:**
+- [x] `lib/storage.ts` - CRUD operations for localStorage
+- [x] `hooks/useLocalStorage.ts` - React hook for localStorage sync
+- [x] `hooks/useStudy.ts` - Study operations
+- [x] `hooks/useInterview.ts` - Interview operations
+
+**Key Functions:**
+```typescript
+// lib/storage.ts
+- saveStudy(study: Study): string
+- getStudy(id: string): Study | null
+- listStudies(): Study[]
+- saveInterview(studyId: string, interview: Interview): string
+- getInterviews(studyId: string): Interview[]
+- saveReport(studyId: string, report: Report): void
+- getReport(studyId: string): Report | null
+```
+
+---
+
+### 3. Dashboard ✅
+
+**File:** `app/page.tsx`
+
+**Features:**
+- [x] Header with branding and "New Study" CTA
 - [x] Study list organized by status (Active, Drafts, Completed)
 - [x] Empty state for new users
-- [x] Responsive layout (mobile-first)
-
-### 2.2 Study Card Component
-- [x] Display study metadata (name, goal, status)
+- [x] Study cards with metadata (name, goal, status)
 - [x] Status badges (draft/active/complete)
-- [x] Quick stats (questions, responses, completion)
-- [x] Last updated timestamp
+- [x] Quick stats (questions, responses)
 - [x] Context-aware action buttons
-- [x] Hover states and animations
+- [x] Responsive layout
 
-### 2.3 Dashboard Actions
-- [ ] "New Study" button → navigate to study setup
-- [ ] "Continue Setup" → navigate to study setup (edit mode)
-- [ ] "Monitor" → navigate to study monitor
-- [ ] "View Report" → navigate to report view
-- [ ] Delete study (with confirmation)
-- [ ] Duplicate study
-- [ ] Archive study
-
-### 2.4 Data Integration
-- [x] Sample data for demonstration
-- [ ] Connect to Firebase Firestore
-- [ ] Real-time updates for active studies
-- [ ] Study filtering and search
+**Actions:**
+- [x] New Study → `/study/new`
+- [x] Continue Setup → `/study/new?id={id}`
+- [x] Monitor → `/study/[id]/monitor`
+- [x] View Report → `/study/[id]/report`
 
 ---
 
-## 3. Study Setup Flow ✅
+### 4. Study Setup ✅
 
-**Phase 1 Scope:** Simple accordion form, all on one page, save to localStorage
+**File:** `app/study/new/page.tsx`
 
-### 3.1 Core Setup Page (1 file: `app/study/new/page.tsx`)
-- [x] Study name input
-- [x] Research Goal textarea (Tier 1)
-- [x] Research Questions list (Tier 2) - add/remove
-- [x] Question Framework list (Tier 3) - add/remove
-- [x] Accordion collapse/expand (from prototype)
-- [x] Save to localStorage on "Launch"
-- [x] Basic validation (name required, at least 1 question)
-- [x] "Launch Study" button → creates study, redirects to dashboard
-
-### 3.2 Skipped for Phase 1 (Move to Phase 2)
-- Description field
-- Character counters
-- AI validation/suggestions
-- Preview mode requirement
-- Drag-to-reorder
-- Metadata configuration
-- Auto-save drafts
-- Complex validation rules
+**Features:**
+- [x] Three-section accordion form
+  - [x] Section 1: Research Goal (textarea)
+  - [x] Section 2: Research Questions (3-6 items, add/remove)
+  - [x] Section 3: Question Framework (5-8 items, add/remove)
+- [x] Active section highlighting (one expanded at a time)
+- [x] Validation (minimums: goal 10 chars, 2-6 questions, 3-8 framework)
+- [x] "Next Tier" button navigation
+- [x] "Launch Study" button → saves and redirects to monitor
+- [x] Auto-save to localStorage on changes
+- [x] Edit mode support (load existing study)
 
 ---
 
-## 4. Interview Experience (Participant-Facing) ✅
+### 5. Interview Experience ✅
 
-**Phase 1 Scope:** Chat interface with Claude API, save to localStorage
+**File:** `app/interview/[id]/page.tsx`
 
-### 4.1 Interview Page (1 file: `app/interview/[id]/page.tsx`)
+**Features:**
 - [x] Load study from localStorage by ID
-- [x] API key management (localStorage)
-- [x] Simple intro screen ("Let's start" button)
+- [x] Intro screen with study context and "Let's start" button
 - [x] Chat interface
-  - [x] Message bubbles (AI vs participant)
-  - [x] Auto-scroll to latest
-  - [x] Typing indicator
-  - [x] Multi-line input (auto-grow)
-  - [x] Send on Enter, Shift+Enter for new line
-- [x] Claude API integration
-  - [x] System prompt with study context (goal, questions, framework)
+  - [x] Message bubbles (AI left, participant right)
+  - [x] AI typing indicator (animated dots)
+  - [x] Multi-line textarea with auto-grow
+  - [x] Progress indicator: "Question X of Y"
+  - [x] Send button (disabled when empty or sending)
+- [x] AI conversation logic
+  - [x] Start with intro message
   - [x] Ask framework questions in order
-  - [x] 1-2 follow-ups per question (smart decision logic)
-  - [x] Graceful wrap up when done
-- [x] Save interview to localStorage
-- [x] Completion screen ("Thank you!")
+  - [x] Smart follow-up decisions (1-2 per question)
+  - [x] Move to next question when ready
+  - [x] Graceful wrap-up message
+- [x] Manual "End Interview" button (escape hatch)
+- [x] Completion screen with thank you message
+- [x] Save interview to localStorage (status: in_progress → complete)
 
-### 4.2 Skipped for Phase 1 (Move to Phase 2)
-- Metadata collection
-- Time-based progress indicator
-- Advanced AI logic (time-aware pacing)
-- Partial save on exit
-- Resume capability
-- Feedback rating
-
----
-
-## 5. Study Monitor 🔲
-
-**Phase 1 Scope:** View interviews, expand for transcript
-
-### 5.1 Monitor Page (1 file: `app/study/[id]/monitor/page.tsx`)
-- [ ] Load study + interviews from localStorage
-- [ ] Simple stats (total interviews, avg duration)
-- [ ] List of interviews
-  - [ ] Expand/collapse for transcript
-  - [ ] Show messages (AI vs participant)
-  - [ ] Duration display
-- [ ] "Generate Report" button
-
-### 5.2 Skipped for Phase 1 (Move to Phase 2)
-- Real-time updates
-- AI summary per interview
-- Export transcripts
-- Share link display
-- Advanced stats
-- Close study functionality
+**API Integration:**
+- [x] POST to `/api/interview` with conversation context
+- [x] Receive AI response with decision metadata
+- [x] Handle follow-up vs. move-on logic
 
 ---
 
-## 6. Report View 🔲
+### 6. API Routes ✅
 
-**Phase 1 Scope:** Display AI-generated analysis from Claude API
+**Files:**
+- [x] `app/api/interview/route.ts` - Interview AI responses
+- [x] `app/api/report/route.ts` - Report generation
+- [x] `app/api/summarize/route.ts` - Interview summarization
 
-### 6.1 Report Page (1 file: `app/study/[id]/report/page.tsx`)
-- [ ] Load study + interviews from localStorage
-- [ ] Call Claude API for analysis
-  - [ ] Send all transcripts
-  - [ ] Send research goal + questions
-  - [ ] Get structured analysis
-- [ ] Display report:
-  - [ ] Executive summary
-  - [ ] Findings per research question
-    - [ ] Themes with participant counts
-    - [ ] Representative quotes
-  - [ ] Unexpected insights
-  - [ ] Further research suggestions
+**A) Interview Route:**
+- [x] Accept conversation context
+- [x] Build Claude prompt with research framework
+- [x] Decision logic for follow-up vs. move on
+- [x] Return AI response + metadata
 
-### 6.2 Skipped for Phase 1 (Move to Phase 2)
-- Export (PDF, Markdown)
-- Shareable links
-- Visual theme indicators
-- Expandable quote blocks
-- Appendix with individual summaries
+**B) Summarize Route:**
+- [x] Accept single interview transcript
+- [x] Generate 2-3 sentence summary
+- [x] Return for monitor page display
 
----
-
-## 7. AI Integration (Claude API) 🔲
-
-**Phase 1 Scope:** Direct API calls from client (simple, no API routes yet)
-
-### 7.1 Interview Engine (Client-side)
-- [ ] Direct Claude API calls from interview page
-- [ ] System prompt with study context
-- [ ] Basic follow-up logic (1-2 per question)
-- [ ] Store API key in localStorage for now
-- [ ] Error handling for API failures
-
-### 7.2 Analysis Engine (Client-side)
-- [ ] Direct Claude API call from report page
-- [ ] Send all interview transcripts
-- [ ] Request structured JSON output
-- [ ] Parse and display findings
-
-### 7.3 Skipped for Phase 1 (Move to Phase 2)
-- API routes (server-side)
-- Streaming responses
-- Advanced follow-up logic
-- Suggestion engine
-- Time-aware pacing
+**C) Report Route:**
+- [x] Accept study ID and all transcripts
+- [x] Build comprehensive Claude prompt
+- [x] Request structured output (themes, quotes, insights)
+- [x] Parse and return Report object
 
 ---
 
----
+### 7. Monitor Screen ✅
 
-## Phase 2: Production Polish & Features 🔲
+**File:** `app/study/[id]/monitor/page.tsx`
 
-**Move to Phase 2 after Phase 1 MVP is working end-to-end**
+**Features:**
+- [x] Stats cards (completed count, avg duration, completion rate, status)
+- [x] Interview list with cards per interview
+- [x] Participant metadata display
+- [x] Status badges (in_progress, complete, abandoned)
+- [x] Duration display
+- [x] Expand/collapse for full transcript
+- [x] AI summary at top of transcript (lazy load)
+- [x] Full message history (AI/participant)
+- [x] "Generate Report" button (enabled with 3+ complete interviews)
+- [x] Share link section with copy button
+- [x] Email template suggestion
 
-### 8. Firebase Integration
-- [ ] Replace localStorage with Firestore
-- [ ] Study/Interview/Report collections
-- [ ] Real-time listeners
-- [ ] Security rules
-
-### 9. Authentication
-- [ ] Firebase Auth setup
-- [ ] Login/signup pages
-- [ ] Protected routes
-- [ ] Multi-user support
-
-### 10. Advanced Setup Features
-- [ ] Accordion UI for study setup
-- [ ] Auto-save drafts
-- [ ] AI suggestions for questions
-- [ ] Preview mode requirement
-- [ ] Drag-to-reorder framework
-- [ ] Metadata field configuration
-
-### 11. Advanced Interview Features
-- [ ] Metadata collection
-- [ ] Time-based progress
-- [ ] Advanced AI pacing
-- [ ] Partial save on exit
-- [ ] Resume capability
-
-### 12. Advanced Monitor Features
-- [ ] Real-time updates
-- [ ] AI summary per interview
-- [ ] Export transcripts
-- [ ] Share link management
-
-### 13. Advanced Report Features
-- [ ] Export (PDF, Markdown)
-- [ ] Shareable public links
-- [ ] Visual theme indicators
-- [ ] Report regeneration
+**Navigation:**
+- [x] StudyTabs component (Setup/Monitor/Report)
+- [x] Generate Report → redirects to report page
 
 ---
 
-## 10. Polish & Production Readiness 🔲
+### 8. Report Screen ✅
 
-### 10.1 Error Handling
-- [ ] Global error boundary
-- [ ] API error handling with user-friendly messages
-- [ ] Network error recovery
-- [ ] Validation error displays
-- [ ] 404 page improvements
-- [ ] 500 error page
+**File:** `app/study/[id]/report/page.tsx`
 
-### 10.2 Loading States
-- [ ] Page-level loading skeletons
-- [ ] Button loading states
-- [ ] Optimistic UI updates
-- [ ] Smooth transitions
-
-### 10.3 Accessibility
-- [ ] ARIA labels
-- [ ] Keyboard navigation
-- [ ] Focus management
-- [ ] Screen reader testing
-- [ ] Color contrast validation (WCAG AA)
-
-### 10.4 Performance
-- [ ] Image optimization
-- [ ] Code splitting
-- [ ] Lazy loading
-- [ ] API response caching
-- [ ] Database query optimization
-
-### 10.5 SEO & Meta
-- [ ] Page titles and descriptions
-- [ ] Open Graph tags
-- [ ] Favicon
-- [ ] Sitemap
-- [ ] robots.txt
-
-### 10.6 Testing
-- [ ] Unit tests (critical utilities)
-- [ ] Component tests (UI components)
-- [ ] Integration tests (API routes)
-- [ ] E2E tests (critical flows)
-- [ ] Manual QA checklist
-
-### 10.7 Documentation
-- [ ] README with setup instructions
-- [ ] API documentation
-- [ ] Component storybook (optional)
-- [ ] Deployment guide
+**Features:**
+- [x] Header with study name
+- [x] Badges (participant count, avg duration, "AI-synthesized")
+- [x] Research Goal card
+- [x] Executive Summary (3-4 sentence TLDR)
+- [x] Findings by Research Question
+  - [x] One card per research question
+  - [x] Themes with participant count badges
+  - [x] Visual bars showing proportions
+  - [x] Representative quotes (styled with left border)
+- [x] Unexpected Insights section
+- [x] Further Research section (numbered list)
+- [x] "Generate Report" CTA if no report exists
 
 ---
 
-## 11. Deployment 🔲
+### 9. Navigation & Polish ✅
 
-### 11.1 Environment Setup
-- [ ] Environment variables (.env.local)
-- [ ] Firebase config (production)
-- [ ] Claude API key management
-- [ ] Secrets management
-
-### 11.2 Build & Deploy
-- [ ] Production build testing
-- [ ] GitHub Pages setup (if static export)
-- [ ] Vercel/Netlify deployment (if SSR needed)
-- [ ] Custom domain configuration
-- [ ] SSL/HTTPS
-
-### 11.3 Monitoring
-- [ ] Error tracking (Sentry or similar)
-- [ ] Analytics (optional)
-- [ ] Performance monitoring
-- [ ] API usage monitoring (Claude API costs)
+**Tasks:**
+- [x] Dashboard loads studies from localStorage
+- [x] Display with StudyCard component
+- [x] Empty state when no studies
+- [x] StudyTabs navigation (Setup/Monitor/Report)
+- [x] Active tab highlighting
+- [x] Loading states during API calls
+- [x] Disabled buttons during submission
+- [x] Error handling with fallback messages
+- [x] Responsive design (mobile-tested)
 
 ---
 
-## 🎯 Immediate Next Steps (Phase 1 MVP)
+## Known Issues & Next Steps
 
-**Current Focus:** Complete working end-to-end flow
+### Critical: Interview Completion Flow
+**Status:** In Progress (manual escape hatch added)
 
-### Sprint 1: Core Pages (Today)
-1. ✅ Simplify study setup to accordion pattern (from prototype)
-2. ⬜ Build interview page with Claude API
-3. ⬜ Build monitor page (view interviews)
-4. ⬜ Build report page (Claude API analysis)
+**Issue:**
+Interviews sometimes don't auto-complete properly when AI wraps up conversation.
 
-### Sprint 2: Integration (Next)
-5. ⬜ Wire up navigation between pages
-6. ⬜ Test full flow: create → interview → monitor → report
-7. ⬜ Add API key management (localStorage)
-8. ⬜ Basic error handling
+**Workaround:**
+Manual "End Interview" button added as escape hatch for participants.
 
-### Sprint 3: Polish (After MVP works)
-9. ⬜ Improve styling consistency
-10. ⬜ Add loading states
-11. ⬜ Mobile responsiveness
-12. ⬜ Demo-ready state
+**Next Steps:**
+- [ ] Review completion detection logic
+- [ ] Improve AI decision-making for when to end
+- [ ] Test edge cases (very short responses, participant leaves mid-interview)
 
-**Success Metric:** Can walk through full flow in 10 minutes
+### Polish Tasks
+- [ ] Toast notifications for user actions
+- [ ] Better error messages for API failures
+- [ ] Improved loading states
+- [ ] Mobile keyboard handling in interview chat
+- [ ] Study deletion with confirmation
+- [ ] Study duplication feature
 
 ---
 
-## 📝 Notes & Decisions
+## Phase 2: Production Ready (Next)
 
-### Design Decisions Made
-- Warm neutrals over pure white/black for reduced eye strain
-- Indigo + Cyan two-color system (researcher vs participant)
-- Serif + Sans pairing (editorial warmth + UI clarity)
+### Goal
+Replace localStorage with Firebase and add authentication for multi-user production deployment.
+
+### Tasks
+1. **Firebase Integration**
+   - [ ] Firestore collections (studies, interviews, reports)
+   - [ ] Real-time listeners for monitor page
+   - [ ] Security rules
+
+2. **Authentication**
+   - [ ] Firebase Auth setup
+   - [ ] Login/signup pages
+   - [ ] Protected routes
+   - [ ] Multi-user support
+
+3. **Advanced Features**
+   - [ ] Auto-save drafts
+   - [ ] Study templates/duplication
+   - [ ] Export reports (PDF, Markdown)
+   - [ ] Email invitations with tracking
+   - [ ] Advanced AI follow-up logic (content-based decisions)
+
+---
+
+## Success Criteria (Phase 1) ✅
+
+- ✅ Researcher can create a study with 3-tier framework
+- ✅ Study setup auto-saves to localStorage
+- ✅ Shareable link generated for participants
+- ✅ Participants can complete AI-moderated interview
+- ✅ AI asks contextual follow-up questions (1-2 per framework question)
+- ✅ Interview progress tracked and visible to researcher
+- ✅ Monitor page displays all interviews with expand/collapse
+- ✅ Report generation works with 3+ interviews
+- ✅ Report displays structured findings with themes and quotes
+- ✅ App runs smoothly on local dev server
+- ✅ Styling matches design system
+- ✅ Mobile-responsive (especially interview chat)
+- ✅ Manual completion escape hatch for interviews
+
+---
+
+## Testing & Verification
+
+### End-to-End Flow
+1. ✅ Create study with goal, research questions, framework
+2. ✅ Copy shareable link from monitor page
+3. ✅ Complete interview as participant (different browser/incognito)
+4. ✅ View interview in monitor page
+5. ✅ Generate report after 3+ interviews
+6. ✅ View synthesized report with themes and quotes
+
+### Local Development
+```bash
+npm run dev
+# Verify:
+# - Server starts on http://localhost:3000
+# - No console errors
+# - All pages load
+# - API routes respond
+# - Hot reload works
+```
+
+---
+
+## Notes & Decisions
+
+### Design
+- Warm neutrals for reduced eye strain
+- Indigo + Cyan two-color system
+- Serif + Sans pairing (editorial + UI)
 - Border-heavy, shadow-light elevation
-- Time-based progress in interviews (not question count)
+- Time-based progress (not question count)
 
-### Technical Decisions Made
-- Next.js 14 App Router (modern, optimized)
-- Tailwind CSS (rapid development, design system alignment)
-- Firebase (scalable, real-time, auth included)
-- Claude API (best-in-class conversational AI)
+### Technical
+- Next.js 14 App Router
+- Tailwind CSS for design system
+- localStorage for Phase 1 (Firebase for Phase 2)
+- Claude API (claude-sonnet-4-20250514)
+- Study IDs: crypto.randomUUID()
 
-### Open Questions
-- [ ] Report regeneration: Replace old or version?
-- [ ] Metadata field limits: How many? What types?
-- [ ] Share link mechanics: Simple URL or tracking params?
-- [ ] Interview timeout: Auto-save and resume or mark abandoned?
-- [ ] Dark mode toggle: Nav bar or settings page?
+### Open Questions for Phase 2
+- [ ] Report versioning: replace or version history?
+- [ ] Interview timeout: auto-save and resume?
 - [ ] Export formats: PDF, Markdown, both?
-- [ ] Individual transcript sharing: Yes or only full reports?
-- [ ] AI follow-up transparency: Show dynamic vs seamless?
+- [ ] Dark mode toggle: nav bar or settings?
 
 ---
 
-**Last Updated:** 2026-02-09
-**Current Focus:** Dashboard Complete → Study Setup Flow Next
+**Last Updated:** 2026-02-11
+**Current Status:** Phase 1 MVP ~95% complete, ready for production planning

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Interview } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { ThemeToggle } from "@/components/features/theme-toggle"
 import { useStudy } from "@/hooks/useStudy"
 import { useInterviews } from "@/hooks/useInterview"
 import { saveInterview } from "@/lib/storage"
@@ -189,8 +190,8 @@ export default function MonitorPage() {
         {/* Interviews List */}
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">
-              Interviews ({stats.complete} complete)
+            <h2 className="font-serif text-xl font-normal text-foreground">
+              Interviews <span className="font-sans text-sm text-muted-foreground">({stats.complete} complete)</span>
             </h2>
             {stats.complete >= 3 && (
               <Button onClick={handleGenerateReport}>

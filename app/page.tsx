@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { StudyCard } from "@/components/features/study-card"
 import { EmptyState } from "@/components/features/empty-state"
+import { ThemeToggle } from "@/components/features/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { useStudies } from "@/hooks/useStudy"
 import { deleteStudy } from "@/lib/storage"
@@ -111,9 +112,12 @@ export default function HomePage() {
                 AI-moderated research interviews at scale
               </p>
             </div>
-            <Button size="lg" onClick={handleCreateStudy}>
-              + New Study
-            </Button>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <Button size="lg" onClick={handleCreateStudy}>
+                + New Study
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -127,9 +131,9 @@ export default function HomePage() {
             {/* Active Studies */}
             {activeStudies.length > 0 && (
               <section className="fade-up">
-                <h2 className="text-xl font-semibold mb-4">
+                <h2 className="font-serif text-xl font-normal mb-4">
                   Active Studies
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  <span className="ml-2 text-sm font-sans font-normal text-muted-foreground">
                     ({activeStudies.length})
                   </span>
                 </h2>
@@ -150,9 +154,9 @@ export default function HomePage() {
             {/* Draft Studies */}
             {draftStudies.length > 0 && (
               <section className="fade-up" style={{ animationDelay: "0.1s" }}>
-                <h2 className="text-xl font-semibold mb-4">
+                <h2 className="font-serif text-xl font-normal mb-4">
                   Drafts
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  <span className="ml-2 text-sm font-sans font-normal text-muted-foreground">
                     ({draftStudies.length})
                   </span>
                 </h2>
@@ -173,9 +177,9 @@ export default function HomePage() {
             {/* Completed Studies */}
             {completeStudies.length > 0 && (
               <section className="fade-up" style={{ animationDelay: "0.2s" }}>
-                <h2 className="text-xl font-semibold mb-4">
+                <h2 className="font-serif text-xl font-normal mb-4">
                   Completed
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  <span className="ml-2 text-sm font-sans font-normal text-muted-foreground">
                     ({completeStudies.length})
                   </span>
                 </h2>

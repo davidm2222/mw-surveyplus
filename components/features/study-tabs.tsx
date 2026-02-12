@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { ThemeToggle } from "./theme-toggle"
 import { Study } from "@/types"
 
 interface StudyTabsProps {
@@ -58,12 +59,15 @@ export function StudyTabs({ study }: StudyTabsProps) {
               {study.researchGoal}
             </p>
           </div>
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors ml-4"
-          >
-            ← Dashboard
-          </Link>
+          <div className="flex items-center gap-3 ml-4">
+            <ThemeToggle />
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Dashboard
+            </Link>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
