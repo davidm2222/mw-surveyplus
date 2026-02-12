@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Interview } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -24,18 +24,7 @@ export default function MonitorPage() {
   const [loadingSummaries, setLoadingSummaries] = useState<Set<string>>(new Set())
   const [generatingReport, setGeneratingReport] = useState(false)
 
-  // Generate summaries for interviews that don't have one
-  useEffect(() => {
-    if (interviews.length > 0 && study) {
-      interviews.forEach((interview: Interview) => {
-        if (!interview.aiSummary && interview.status === "complete" && !loadingSummaries.has(interview.id)) {
-          generateSummary(interview)
-        }
-      })
-    }
-  }, [interviews.length])
-
-  const generateSummary = async (interview: Interview) => {
+  const generateSummary = useCallback(async (interview: Interview) => {
     setLoadingSummaries(prev => new Set(prev).add(interview.id))
 
     try {
@@ -75,7 +64,18 @@ export default function MonitorPage() {
         return next
       })
     }
-  }
+  }, [study, refresh])
+
+  // Generate summaries for interviews that don't have one
+  useEffect(() => {
+    if (interviews.length > 0 && study) {
+      interviews.forEach((interview: Interview) => {
+        if (!interview.aiSummary && interview.status === "complete" && !loadingSummaries.has(interview.id)) {
+          generateSummary(interview)
+        }
+      })
+    }
+  }, [interviews, study, generateSummary, loadingSummaries])
 
   const toggleExpanded = (interviewId: string) => {
     setExpandedInterviews(prev => {
