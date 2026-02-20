@@ -14,26 +14,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages
-      })
+    const requestBody = JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages
     })
 
-    if (!response.ok) {
-      const error = await response.text()
+    let response: Response | null = null
+    const maxRetries = 3
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: requestBody
+      })
+
+      if (response.status !== 529 || attempt === maxRetries) break
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)))
+    }
+
+    if (!response!.ok) {
+      const error = await response!.text()
       return NextResponse.json(
-        { error: `API error: ${response.status}`, details: error },
-        { status: response.status }
+        { error: `API error: ${response!.status}`, details: error },
+        { status: response!.status }
       )
     }
 
