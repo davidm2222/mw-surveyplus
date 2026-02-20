@@ -48,26 +48,26 @@ export function StudyTabs({ study }: StudyTabsProps) {
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Study Header */}
         <div className="py-4 flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-semibold text-foreground truncate">
-                {study.name}
-              </h1>
-              <Badge variant={statusVariant}>{statusLabel}</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {study.researchGoal}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 ml-4">
-            <ThemeToggle />
+          <div className="flex items-start gap-4">
             <Link
               href="/"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-1.5"
             >
               ← Dashboard
             </Link>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-semibold text-foreground truncate">
+                  {study.name}
+                </h1>
+                <Badge variant={statusVariant}>{statusLabel}</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-1">
+                {study.researchGoal}
+              </p>
+            </div>
           </div>
+          <ThemeToggle />
         </div>
 
         {/* Navigation Tabs */}
