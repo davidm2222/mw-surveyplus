@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { useStudy } from "@/hooks/useStudy"
 import { ThemeToggle } from "@/components/features/theme-toggle"
 import { Message, Interview } from "@/types"
-import { saveInterview, getInterview } from "@/lib/storage"
+import { saveInterview, getInterview } from "@/lib/db"
 import { generateId } from "@/lib/utils"
 
 export default function InterviewPage() {
@@ -47,7 +47,7 @@ export default function InterviewPage() {
     }
   }, [input])
 
-  const handleStartInterview = useCallback(() => {
+  const handleStartInterview = useCallback(async () => {
     if (!study) return
 
     // Create interview session
@@ -65,11 +65,11 @@ export default function InterviewPage() {
       startedAt: now
     }
 
-    saveInterview(newInterview)
+    await saveInterview(newInterview)
     setHasStarted(true)
     setIsTyping(true)
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const welcomeMsg: Message = {
         role: "ai",
         text: "Thanks for participating! I'll be asking you a few questions about your experience. This should take about 5-10 minutes. Just respond naturally — there are no right or wrong answers.",
@@ -78,13 +78,13 @@ export default function InterviewPage() {
       setMessages([welcomeMsg])
 
       // Save with first message
-      saveInterview({
+      await saveInterview({
         ...newInterview,
         messages: [welcomeMsg],
         duration: Math.floor((new Date().getTime() - now.getTime()) / 1000)
       })
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const firstQ: Message = {
           role: "ai",
           text: study.questionFramework[0],
@@ -94,7 +94,7 @@ export default function InterviewPage() {
         setMessages(updatedMessages)
 
         // Save with both messages
-        saveInterview({
+        await saveInterview({
           ...newInterview,
           messages: updatedMessages,
           duration: Math.floor((new Date().getTime() - now.getTime()) / 1000)
@@ -105,13 +105,13 @@ export default function InterviewPage() {
     }, 600)
   }, [study, studyId])
 
-  const handleCompleteInterview = useCallback(() => {
+  const handleCompleteInterview = useCallback(async () => {
     if (!study || !interviewIdRef.current || !interviewStartTime) return
 
-    const interview = getInterview(interviewIdRef.current)
+    const interview = await getInterview(interviewIdRef.current)
     if (interview) {
       const now = new Date()
-      saveInterview({
+      await saveInterview({
         ...interview,
         status: "complete",
         completedAt: now,
@@ -143,9 +143,9 @@ export default function InterviewPage() {
 
     // Save message to interview
     if (interviewIdRef.current && interviewStartTime) {
-      const interview = getInterview(interviewIdRef.current)
+      const interview = await getInterview(interviewIdRef.current)
       if (interview) {
-        saveInterview({
+        await saveInterview({
           ...interview,
           messages: updatedMessages,
           duration: Math.floor((new Date().getTime() - interviewStartTime.getTime()) / 1000)
@@ -323,7 +323,7 @@ STYLE:
 
       // Save AI message to interview (and mark complete if finished)
       if (interviewIdRef.current && interviewStartTime) {
-        const interview = getInterview(interviewIdRef.current)
+        const interview = await getInterview(interviewIdRef.current)
         if (interview) {
           const now = new Date()
           const duration = Math.floor((now.getTime() - interviewStartTime.getTime()) / 1000)
@@ -336,7 +336,7 @@ STYLE:
             status: isFinished ? "complete" : "in_progress"
           })
 
-          saveInterview({
+          await saveInterview({
             ...interview,
             messages: allMessages,
             duration: duration,
@@ -403,12 +403,12 @@ STYLE:
 
       // Save fallback message to interview (and mark complete if finished)
       if (interviewIdRef.current && interviewStartTime) {
-        const interview = getInterview(interviewIdRef.current)
+        const interview = await getInterview(interviewIdRef.current)
         if (interview) {
           const now = new Date()
           const duration = Math.floor((now.getTime() - interviewStartTime.getTime()) / 1000)
 
-          saveInterview({
+          await saveInterview({
             ...interview,
             messages: allMessages,
             duration: duration,

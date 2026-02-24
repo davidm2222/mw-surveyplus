@@ -7,12 +7,21 @@ import { ThemeToggle } from "@/components/features/theme-toggle"
 import { useStudy } from "@/hooks/useStudy"
 import { Study } from "@/types"
 
+const RESEARCHER_ID_KEY = "surveyplus_researcher_id"
+
 export default function NewStudyPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editingId = searchParams.get("id")
 
   const { study: existingStudy, saveStudy, error: studyError } = useStudy(editingId || undefined)
+  const researcherIdRef = useRef<string>("")
+
+  // Read researcherId from localStorage on mount
+  useEffect(() => {
+    const id = localStorage.getItem(RESEARCHER_ID_KEY)
+    if (id) researcherIdRef.current = id
+  }, [])
 
   const [activeTier, setActiveTier] = useState(0)
   const [studyId, setStudyId] = useState<string | null>(editingId)
@@ -37,7 +46,7 @@ export default function NewStudyPage() {
   }, [existingStudy?.id]) // Only run when study ID changes, not on every update
 
   // Auto-save draft whenever data changes
-  const handleSaveDraft = useCallback(() => {
+  const handleSaveDraft = useCallback(async () => {
     if (savingRef.current) return
 
     try {
@@ -46,8 +55,9 @@ export default function NewStudyPage() {
       const filledQuestions = researchQuestions.filter(q => q.trim())
       const filledPrompts = questionFramework.filter(q => q.trim())
 
-      const id = saveStudy({
+      const id = await saveStudy({
         id: studyId || undefined,
+        researcherId: researcherIdRef.current,
         name: name.trim() || "Untitled Study",
         researchGoal: goal.trim(),
         researchQuestions: filledQuestions,
@@ -167,7 +177,7 @@ export default function NewStudyPage() {
     setDraggedIndex(null)
   }
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
     // Validate form
     if (!validateForm()) {
       // Navigate to the first tier with errors
@@ -185,8 +195,9 @@ export default function NewStudyPage() {
       const filledQuestions = researchQuestions.filter(q => q.trim())
       const filledPrompts = questionFramework.filter(q => q.trim())
 
-      const id = saveStudy({
+      const id = await saveStudy({
         id: studyId || undefined,
+        researcherId: researcherIdRef.current,
         name: name.trim(),
         researchGoal: goal.trim(),
         researchQuestions: filledQuestions,

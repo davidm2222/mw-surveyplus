@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/features/theme-toggle"
 import { useStudy } from "@/hooks/useStudy"
 import { useInterviews } from "@/hooks/useInterview"
-import { saveInterview } from "@/lib/storage"
+import { saveInterview } from "@/lib/db"
 import { StudyTabs } from "@/components/features/study-tabs"
 import { StudyContext } from "@/components/features/study-context"
 
@@ -48,7 +48,7 @@ export default function MonitorPage() {
       const summary = data.summary
 
       // Update interview with summary using storage layer
-      saveInterview({
+      await saveInterview({
         ...interview,
         aiSummary: summary
       })

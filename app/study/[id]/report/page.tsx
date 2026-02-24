@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useStudy } from "@/hooks/useStudy"
 import { useInterviews } from "@/hooks/useInterview"
-import { getReport, saveReport } from "@/lib/storage"
+import { getReport, saveReport } from "@/lib/db"
 import { generateId } from "@/lib/utils"
 import { StudyTabs } from "@/components/features/study-tabs"
 import { StudyContext } from "@/components/features/study-context"
@@ -26,12 +26,10 @@ export default function ReportPage() {
 
   // Load existing report
   useEffect(() => {
-    if (studyId) {
-      const existingReport = getReport(studyId)
-      if (existingReport) {
-        setReport(existingReport)
-      }
-    }
+    if (!studyId) return
+    getReport(studyId).then((existingReport) => {
+      if (existingReport) setReport(existingReport)
+    })
   }, [studyId])
 
   const generateReport = async () => {
@@ -84,7 +82,7 @@ export default function ReportPage() {
       }
 
       // Save using storage layer
-      saveReport(newReport)
+      await saveReport(newReport)
       setReport(newReport)
     } catch (error) {
       console.error("Error generating report:", error)

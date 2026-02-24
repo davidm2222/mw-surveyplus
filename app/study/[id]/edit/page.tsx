@@ -7,12 +7,20 @@ import { useStudy } from "@/hooks/useStudy"
 import { StudyTabs } from "@/components/features/study-tabs"
 import { StudyContext } from "@/components/features/study-context"
 
+const RESEARCHER_ID_KEY = "surveyplus_researcher_id"
+
 export default function EditStudyPage() {
   const params = useParams()
   const router = useRouter()
   const studyId = params.id as string
 
   const { study: existingStudy, saveStudy, loading } = useStudy(studyId)
+  const researcherIdRef = useRef<string>("")
+
+  useEffect(() => {
+    const id = localStorage.getItem(RESEARCHER_ID_KEY)
+    if (id) researcherIdRef.current = id
+  }, [])
 
   const [activeTier, setActiveTier] = useState(0)
   const [name, setName] = useState("")
@@ -35,7 +43,7 @@ export default function EditStudyPage() {
   }, [existingStudy?.id])
 
   // Auto-save draft whenever data changes
-  const handleSaveDraft = useCallback(() => {
+  const handleSaveDraft = useCallback(async () => {
     if (savingRef.current) return
 
     try {
@@ -44,8 +52,9 @@ export default function EditStudyPage() {
       const filledQuestions = researchQuestions.filter(q => q.trim())
       const filledPrompts = questionFramework.filter(q => q.trim())
 
-      saveStudy({
+      await saveStudy({
         id: studyId,
+        researcherId: existingStudy?.researcherId || researcherIdRef.current,
         name: name.trim() || "Untitled Study",
         researchGoal: goal.trim(),
         researchQuestions: filledQuestions,
@@ -58,7 +67,7 @@ export default function EditStudyPage() {
       savingRef.current = false
       setSaving(false)
     }
-  }, [name, goal, researchQuestions, questionFramework, studyId, saveStudy, existingStudy?.status])
+  }, [name, goal, researchQuestions, questionFramework, studyId, saveStudy, existingStudy?.researcherId, existingStudy?.status])
 
   useEffect(() => {
     const hasContent = name.trim() || goal.trim() ||
@@ -158,7 +167,7 @@ export default function EditStudyPage() {
     setDraggedIndex(null)
   }
 
-  const handleSaveAndContinue = () => {
+  const handleSaveAndContinue = async () => {
     if (!validateForm()) {
       if (validationErrors.name || validationErrors.goal) {
         setActiveTier(0)
@@ -174,8 +183,9 @@ export default function EditStudyPage() {
       const filledQuestions = researchQuestions.filter(q => q.trim())
       const filledPrompts = questionFramework.filter(q => q.trim())
 
-      saveStudy({
+      await saveStudy({
         id: studyId,
+        researcherId: existingStudy?.researcherId || researcherIdRef.current,
         name: name.trim(),
         researchGoal: goal.trim(),
         researchQuestions: filledQuestions,

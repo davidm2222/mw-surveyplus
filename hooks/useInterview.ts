@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { Interview, Message } from "@/types"
 import {
-  saveInterview as storeSaveInterview,
-  getInterview as storeGetInterview,
-  getInterviews as storeGetInterviews,
-  deleteInterview as storeDeleteInterview,
-} from "@/lib/storage"
+  saveInterview as dbSaveInterview,
+  getInterview as dbGetInterview,
+  getInterviews as dbGetInterviews,
+  deleteInterview as dbDeleteInterview,
+} from "@/lib/db"
 import { generateId } from "@/lib/utils"
 
 /**
@@ -25,25 +25,29 @@ export function useInterview(interviewId?: string) {
       return
     }
 
-    try {
-      const loadedInterview = storeGetInterview(interviewId)
-      if (loadedInterview) {
-        setInterview(loadedInterview)
-        setError(null)
-      } else {
-        setError("Interview not found")
+    const load = async () => {
+      try {
+        const loadedInterview = await dbGetInterview(interviewId)
+        if (loadedInterview) {
+          setInterview(loadedInterview)
+          setError(null)
+        } else {
+          setError("Interview not found")
+        }
+      } catch (err) {
+        setError("Failed to load interview")
+        console.error(err)
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      setError("Failed to load interview")
-      console.error(err)
-    } finally {
-      setLoading(false)
     }
+
+    load()
   }, [interviewId])
 
   // Create new interview
   const startInterview = useCallback(
-    (studyId: string, participantMetadata?: Record<string, string>): string => {
+    async (studyId: string, participantMetadata?: Record<string, string>): Promise<string> => {
       try {
         const now = new Date()
         const newInterview: Interview = {
@@ -56,7 +60,7 @@ export function useInterview(interviewId?: string) {
           startedAt: now,
         }
 
-        const savedId = storeSaveInterview(newInterview)
+        const savedId = await dbSaveInterview(newInterview)
         setInterview(newInterview)
         setError(null)
         return savedId
@@ -72,7 +76,7 @@ export function useInterview(interviewId?: string) {
 
   // Add message to interview
   const addMessage = useCallback(
-    (message: Omit<Message, "timestamp">) => {
+    async (message: Omit<Message, "timestamp">) => {
       if (!interview) return
 
       try {
@@ -89,7 +93,7 @@ export function useInterview(interviewId?: string) {
           ),
         }
 
-        storeSaveInterview(updatedInterview)
+        await dbSaveInterview(updatedInterview)
         setInterview(updatedInterview)
         setError(null)
       } catch (err) {
@@ -101,7 +105,7 @@ export function useInterview(interviewId?: string) {
   )
 
   // Complete interview
-  const completeInterview = useCallback(() => {
+  const completeInterview = useCallback(async () => {
     if (!interview) return
 
     try {
@@ -115,7 +119,7 @@ export function useInterview(interviewId?: string) {
         ),
       }
 
-      storeSaveInterview(updatedInterview)
+      await dbSaveInterview(updatedInterview)
       setInterview(updatedInterview)
       setError(null)
     } catch (err) {
@@ -125,7 +129,7 @@ export function useInterview(interviewId?: string) {
   }, [interview])
 
   // Abandon interview
-  const abandonInterview = useCallback(() => {
+  const abandonInterview = useCallback(async () => {
     if (!interview) return
 
     try {
@@ -139,7 +143,7 @@ export function useInterview(interviewId?: string) {
         ),
       }
 
-      storeSaveInterview(updatedInterview)
+      await dbSaveInterview(updatedInterview)
       setInterview(updatedInterview)
       setError(null)
     } catch (err) {
@@ -150,7 +154,7 @@ export function useInterview(interviewId?: string) {
 
   // Update AI summary
   const updateSummary = useCallback(
-    (summary: string) => {
+    async (summary: string) => {
       if (!interview) return
 
       try {
@@ -159,7 +163,7 @@ export function useInterview(interviewId?: string) {
           aiSummary: summary,
         }
 
-        storeSaveInterview(updatedInterview)
+        await dbSaveInterview(updatedInterview)
         setInterview(updatedInterview)
         setError(null)
       } catch (err) {
@@ -191,8 +195,7 @@ export function useInterviews(studyId: string) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load interviews on mount or when study ID changes
-  const loadInterviews = useCallback(() => {
+  const loadInterviews = useCallback(async () => {
     if (!studyId) {
       setInterviews([])
       setLoading(false)
@@ -201,7 +204,7 @@ export function useInterviews(studyId: string) {
 
     try {
       setLoading(true)
-      const loadedInterviews = storeGetInterviews(studyId)
+      const loadedInterviews = await dbGetInterviews(studyId)
       setInterviews(loadedInterviews)
       setError(null)
     } catch (err) {
@@ -216,21 +219,17 @@ export function useInterviews(studyId: string) {
     loadInterviews()
   }, [loadInterviews])
 
-  // Refresh interviews from storage
   const refresh = useCallback(() => {
     loadInterviews()
   }, [loadInterviews])
 
-  // Delete interview
   const deleteInterview = useCallback(
-    (interviewId: string): boolean => {
+    async (interviewId: string): Promise<boolean> => {
       try {
-        const success = storeDeleteInterview(interviewId)
-        if (success) {
-          setInterviews(interviews.filter((i) => i.id !== interviewId))
-        }
+        await dbDeleteInterview(interviewId)
+        setInterviews(interviews.filter((i) => i.id !== interviewId))
         setError(null)
-        return success
+        return true
       } catch (err) {
         setError("Failed to delete interview")
         console.error(err)
@@ -240,7 +239,6 @@ export function useInterviews(studyId: string) {
     [interviews]
   )
 
-  // Calculate statistics
   const stats = {
     total: interviews.length,
     complete: interviews.filter((i) => i.status === "complete").length,
@@ -263,7 +261,6 @@ export function useInterviews(studyId: string) {
         : 0,
   }
 
-  // Filter helpers
   const completeInterviews = interviews.filter((i) => i.status === "complete")
   const inProgressInterviews = interviews.filter(
     (i) => i.status === "in_progress"

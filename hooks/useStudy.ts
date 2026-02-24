@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { Study } from "@/types"
 import {
-  saveStudy as storeSaveStudy,
-  getStudy as storeGetStudy,
-  listStudies as storeListStudies,
-  deleteStudy as storeDeleteStudy,
-  updateStudyStatus as storeUpdateStudyStatus,
-} from "@/lib/storage"
+  saveStudy as dbSaveStudy,
+  getStudy as dbGetStudy,
+  listStudies as dbListStudies,
+  deleteStudy as dbDeleteStudy,
+  updateStudyStatus as dbUpdateStudyStatus,
+} from "@/lib/db"
 import { generateId } from "@/lib/utils"
 
 /**
@@ -26,29 +26,34 @@ export function useStudy(studyId?: string) {
       return
     }
 
-    try {
-      const loadedStudy = storeGetStudy(studyId)
-      if (loadedStudy) {
-        setStudy(loadedStudy)
-        setError(null)
-      } else {
-        setError("Study not found")
+    const load = async () => {
+      try {
+        const loadedStudy = await dbGetStudy(studyId)
+        if (loadedStudy) {
+          setStudy(loadedStudy)
+          setError(null)
+        } else {
+          setError("Study not found")
+        }
+      } catch (err) {
+        setError("Failed to load study")
+        console.error(err)
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      setError("Failed to load study")
-      console.error(err)
-    } finally {
-      setLoading(false)
     }
+
+    load()
   }, [studyId])
 
   // Create or update study
   const saveStudy = useCallback(
-    (studyData: Partial<Study>): string => {
+    async (studyData: Partial<Study> & { researcherId: string }): Promise<string> => {
       try {
         const now = new Date()
         const studyToSave: Study = {
           id: studyData.id || generateId(),
+          researcherId: studyData.researcherId,
           name: studyData.name || "",
           status: studyData.status || "draft",
           researchGoal: studyData.researchGoal || "",
@@ -56,12 +61,12 @@ export function useStudy(studyId?: string) {
           questionFramework: studyData.questionFramework || [],
           metadataFields: studyData.metadataFields,
           shareableLink: studyData.shareableLink,
-          createdBy: studyData.createdBy || "user-1", // Default for local prototype
+          createdBy: studyData.createdBy || studyData.researcherId,
           createdAt: studyData.createdAt || now,
           updatedAt: now,
         }
 
-        const savedId = storeSaveStudy(studyToSave)
+        const savedId = await dbSaveStudy(studyToSave)
         setStudy(studyToSave)
         setError(null)
         return savedId
@@ -77,16 +82,14 @@ export function useStudy(studyId?: string) {
 
   // Update study status
   const updateStatus = useCallback(
-    (newStatus: Study["status"]): boolean => {
+    async (newStatus: Study["status"]): Promise<boolean> => {
       if (!study) return false
 
       try {
-        const success = storeUpdateStudyStatus(study.id, newStatus)
-        if (success) {
-          setStudy({ ...study, status: newStatus, updatedAt: new Date() })
-          setError(null)
-        }
-        return success
+        await dbUpdateStudyStatus(study.id, newStatus)
+        setStudy({ ...study, status: newStatus, updatedAt: new Date() })
+        setError(null)
+        return true
       } catch (err) {
         setError("Failed to update status")
         console.error(err)
@@ -98,14 +101,14 @@ export function useStudy(studyId?: string) {
 
   // Delete study
   const deleteStudy = useCallback(
-    (id: string): boolean => {
+    async (id: string): Promise<boolean> => {
       try {
-        const success = storeDeleteStudy(id)
-        if (success && study?.id === id) {
+        await dbDeleteStudy(id)
+        if (study?.id === id) {
           setStudy(null)
         }
         setError(null)
-        return success
+        return true
       } catch (err) {
         setError("Failed to delete study")
         console.error(err)
@@ -115,12 +118,12 @@ export function useStudy(studyId?: string) {
     [study]
   )
 
-  // Reload study from storage
-  const reload = useCallback(() => {
+  // Reload study from Firestore
+  const reload = useCallback(async () => {
     if (!studyId) return
 
     try {
-      const loadedStudy = storeGetStudy(studyId)
+      const loadedStudy = await dbGetStudy(studyId)
       setStudy(loadedStudy)
       setError(null)
     } catch (err) {
@@ -142,18 +145,23 @@ export function useStudy(studyId?: string) {
 
 /**
  * Hook for managing list of studies
- * Returns studies array and refresh function
+ * Filters by researcherId so each researcher sees only their own studies.
  */
-export function useStudies() {
+export function useStudies(researcherId: string) {
   const [studies, setStudies] = useState<Study[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load studies on mount
-  const loadStudies = useCallback(() => {
+  const loadStudies = useCallback(async () => {
+    if (!researcherId) {
+      setStudies([])
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
-      const loadedStudies = storeListStudies()
+      const loadedStudies = await dbListStudies(researcherId)
       setStudies(loadedStudies)
       setError(null)
     } catch (err) {
@@ -162,18 +170,16 @@ export function useStudies() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [researcherId])
 
   useEffect(() => {
     loadStudies()
   }, [loadStudies])
 
-  // Refresh studies from storage
   const refresh = useCallback(() => {
     loadStudies()
   }, [loadStudies])
 
-  // Filter helpers
   const activeStudies = studies.filter((s) => s.status === "active")
   const draftStudies = studies.filter((s) => s.status === "draft")
   const completeStudies = studies.filter((s) => s.status === "complete")

@@ -1,8 +1,8 @@
 # SurveyPlus — Build Plan & Progress
 
 **Product:** AI-moderated research interviews at scale
-**Stack:** Next.js 14, TypeScript, Tailwind CSS, Claude API, localStorage (Phase 1)
-**Status:** 🚀 Phase 1 MVP Near Complete
+**Stack:** Next.js 14, TypeScript, Tailwind CSS, Claude API, Firebase Firestore (Phase 2)
+**Status:** 🔥 Phase 2 In Progress — Firebase Migration
 
 ---
 
@@ -22,8 +22,8 @@
 **Phase 1 Completion: ~95%**
 
 **Phase 2: Production (Firebase + Auth)**
-- [ ] Firebase Integration
-- [ ] Authentication
+- [x] Firebase Integration (Firestore data layer, researcherId, shareable links)
+- [ ] Authentication (Firebase Auth, login/signup, protected routes)
 - [ ] Advanced Features
 
 ---
@@ -285,16 +285,20 @@ Completion detection logic in `app/interview/[id]/page.tsx` isn't properly recog
 
 ---
 
-## Phase 2: Production Ready (Next)
+## Phase 2: Production Ready (Active)
 
 ### Goal
-Replace localStorage with Firebase and add authentication for multi-user production deployment.
+Replace localStorage with Firebase Firestore for cross-device data sharing, then add authentication for multi-user production deployment.
 
 ### Tasks
-1. **Firebase Integration**
-   - [ ] Firestore collections (studies, interviews, reports)
-   - [ ] Real-time listeners for monitor page
-   - [ ] Security rules
+1. **Firebase Integration** ✅
+   - [x] Firestore collections (studies, interviews, reports)
+   - [x] `lib/firebase.ts` — Firebase app init
+   - [x] `lib/db.ts` — async Firestore CRUD layer
+   - [x] `researcherId` UUID in localStorage, tagged on all studies
+   - [x] Dashboard filters by researcherId
+   - [x] Shareable interview links work cross-device
+   - [ ] Security rules (open for now, tighten with auth)
 
 2. **Authentication**
    - [ ] Firebase Auth setup
@@ -376,5 +380,109 @@ npm run dev
 
 ---
 
-**Last Updated:** 2026-02-11
-**Current Status:** Phase 1 MVP ~95% complete, ready for production planning
+**Last Updated:** 2026-02-24
+**Current Status:** Phase 2 in progress — Firebase Firestore migration complete, auth next
+
+---
+
+## Future Enhancements
+
+Feature ideas and improvements out of scope for the current phase. Prioritized for Phase 2+.
+
+---
+
+### Setup & Onboarding
+
+**Persistent Navigation in Setup Wizard** — Priority: High
+When navigating to the Setup tab from Monitor/Report, StudyTabs disappears. Users should be able to navigate freely between Setup/Monitor/Report. Options: add StudyTabs to wizard, create separate view-only Study Details, or separate "Edit" from "Setup."
+
+**Accordion UI for Study Setup** — Priority: Medium
+Collapsible sections for Goal, Research Questions, and Framework. Keeps single-page flow while reducing visual density.
+
+**AI Coaching During Study Setup** — Priority: Medium
+Real-time inline feedback as researcher types: goal validation, AI-suggested research questions based on goal, AI-suggested framework questions based on research questions. Non-blocking (advisory only).
+
+**Start from Example Templates** — Priority: Medium
+On "New Study" screen: start from scratch OR pick a template (onboarding friction, feature discovery, churn, usability, PMF validation). Templates are fully editable before launch.
+
+---
+
+### Participant Experience
+
+**Content-Based Follow-Up Decisions (AI-Driven)** — Priority: High
+Instead of word count + follow-up count heuristics, have AI evaluate each response: "Did I get what I need for this research question?" Returns `shouldContinue: bool` with reasoning. Still respects hard caps. Extra API call per response (~2s latency, 2x cost). Hybrid approach (heuristics for clear cases, AI evaluation for ambiguous ones) mitigates cost.
+
+**Voice Input for Participants** — Priority: Low-Medium
+Speech-to-text input option. More natural on mobile; still needs text fallback for accessibility.
+
+**Multi-Language Support** — Priority: Medium
+Researcher writes framework in their language; participant selects preferred language; AI translates and conducts interview; report synthesizes across languages.
+
+---
+
+### Analysis & Reporting
+
+**Interactive Report Dashboard** — Priority: High
+Filter findings by participant segment, search transcripts, compare cohorts ("new vs experienced users"), drill down from theme → quote → full transcript. Keep static export for sharing.
+
+**Mid-Study Adaptation** — Priority: Medium
+After collecting early interviews, researcher can add/modify framework questions for remaining participants. Report notes the change and separates cohorts if needed.
+
+**Confidence Scores on Findings** — Priority: Medium
+Show AI confidence level on each finding ("8 of 12 participants" = high confidence vs. "some participants" = low confidence).
+
+**Export Formats** — Priority: Medium
+PDF, Markdown, CSV (raw data), JSON (full export). Different stakeholders prefer different formats.
+
+**Cross-Study Analysis** — Priority: Low (v3+)
+Identify recurring themes across multiple studies.
+
+---
+
+### Collaboration & Workflow
+
+**Team Collaboration** — Priority: High (v2+)
+Invite team members, role-based permissions (owner/editor/viewer), shared annotations, comment threads on quotes/themes, activity log.
+
+**Email Invitations with Tracking** — Priority: Medium
+Import participant CSV, customize email template, track invite/completion/pending status, send reminders, individual tracking links.
+
+**Panel Integrations** — Priority: Low
+Connect to Prolific, UserTesting, etc. for automated participant sourcing and compensation.
+
+---
+
+### Study Management
+
+**Study Duplication & Templates** — Priority: High (v1.5 quick win)
+Duplicate a study to reuse framework. Copies goal, questions, framework config; resets participant data.
+
+**Longitudinal Studies** — Priority: Low
+Re-interview same participants over time, track attitude/behavior changes, report shows evolution.
+
+---
+
+### Quality & Trust
+
+**Researcher Feedback on AI Quality** — Priority: High (v1.5)
+Thumbs up/down on individual AI follow-ups in Monitor. "Was this report useful?" rating on Report page. Flags feed into prompt refinement.
+
+**Data Deletion Controls** — Priority: High (compliance)
+Delete study, delete individual interview, export all data before deletion, permanent deletion with audit log. Required for GDPR/CCPA.
+
+**Participant Consent Management** — Priority: Medium (v2)
+Customizable consent text, required checkbox before interview, downloadable consent record, option to withdraw post-interview.
+
+---
+
+### Analytics & Misc
+
+**Custom Branding** — Priority: Low (v2+)
+Upload logo, customize intro text, set brand colors, custom domain.
+
+**API Access** — Priority: Low (v3+)
+Public API for programmatic study creation and data export. For enterprise integration and BI tools.
+
+---
+
+*Enhancements are living suggestions. Priorities may shift based on user feedback and product direction.*

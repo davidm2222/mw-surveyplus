@@ -4,6 +4,7 @@
 
 export interface Study {
   id: string
+  researcherId: string
   name: string
   status: 'draft' | 'active' | 'complete'
   researchGoal: string

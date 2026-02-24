@@ -1,76 +1,35 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { StudyCard } from "@/components/features/study-card"
 import { EmptyState } from "@/components/features/empty-state"
 import { ThemeToggle } from "@/components/features/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { useStudies } from "@/hooks/useStudy"
-import { deleteStudy } from "@/lib/storage"
-import { Study } from "@/types"
+import { deleteStudy } from "@/lib/db"
 
-// Sample data for demonstration
-const SAMPLE_STUDIES: Study[] = [
-  {
-    id: "1",
-    name: "Onboarding Experience Research",
-    status: "active",
-    researchGoal: "Understand why new users abandon the onboarding flow in the first week and identify the key friction points that prevent them from reaching their first successful project.",
-    researchQuestions: [
-      "What expectations do new users bring to the product?",
-      "At what specific moments do users feel confused or frustrated?",
-      "What would success in the first week look like from the user's perspective?",
-      "What external resources do users seek out?"
-    ],
-    questionFramework: [
-      "Tell me about your first experience with the product.",
-      "Walk me through a moment where you felt stuck.",
-      "How did you try to figure things out when you got stuck?",
-      "Describe what a successful first week would have looked like.",
-      "What would you change about the getting-started experience?"
-    ],
-    createdBy: "user-1",
-    createdAt: new Date("2026-01-15"),
-    updatedAt: new Date("2026-02-08")
-  },
-  {
-    id: "2",
-    name: "Feature Discovery Study",
-    status: "complete",
-    researchGoal: "Learn how users discover and adopt advanced features, and what prevents them from exploring beyond basic functionality.",
-    researchQuestions: [
-      "How do users currently discover new features?",
-      "What motivates users to explore beyond the basics?",
-      "What barriers prevent feature adoption?"
-    ],
-    questionFramework: [
-      "How do you typically learn about new features?",
-      "Tell me about a time you discovered something new in the product.",
-      "What stops you from trying new features?"
-    ],
-    createdBy: "user-1",
-    createdAt: new Date("2026-01-10"),
-    updatedAt: new Date("2026-01-28")
-  },
-  {
-    id: "3",
-    name: "Mobile App Usability",
-    status: "draft",
-    researchGoal: "Identify usability issues in the mobile app and understand how mobile usage patterns differ from desktop.",
-    researchQuestions: [
-      "What tasks do users perform on mobile vs desktop?",
-      "What are the main pain points in the mobile experience?"
-    ],
-    questionFramework: [],
-    createdBy: "user-1",
-    createdAt: new Date("2026-02-05"),
-    updatedAt: new Date("2026-02-05")
+const RESEARCHER_ID_KEY = "surveyplus_researcher_id"
+
+function getOrCreateResearcherId(): string {
+  let id = localStorage.getItem(RESEARCHER_ID_KEY)
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem(RESEARCHER_ID_KEY, id)
   }
-]
+  return id
+}
 
 export default function HomePage() {
   const router = useRouter()
-  const { studies, activeStudies, draftStudies, completeStudies, loading, refresh } = useStudies()
+  const [researcherId, setResearcherId] = useState<string>("")
+
+  // Generate or retrieve researcherId on mount (client-side only)
+  useEffect(() => {
+    setResearcherId(getOrCreateResearcherId())
+  }, [])
+
+  const { studies, activeStudies, draftStudies, completeStudies, loading, refresh } = useStudies(researcherId)
 
   const handleCreateStudy = () => {
     router.push("/study/new")
@@ -85,12 +44,12 @@ export default function HomePage() {
     router.push(`/study/new?id=${studyId}`)
   }
 
-  const handleDeleteStudy = (studyId: string) => {
-    deleteStudy(studyId)
+  const handleDeleteStudy = async (studyId: string) => {
+    await deleteStudy(studyId)
     refresh()
   }
 
-  if (loading) {
+  if (!researcherId || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
