@@ -280,6 +280,31 @@ Completion detection logic in `app/interview/[id]/page.tsx` isn't properly recog
 
 **Fix:** Added `getCompletedInterviewCount(studyId)` using Firestore `getCountFromServer`, fetched on dashboard load via `Promise.all`, passed to `StudyCard` as `completedInterviewCount` prop. Now shows `—` until loaded, then real count of completed interviews.
 
+### 🎨 UI Polish (Planned — 4 Changes)
+
+**1. Fix interview intro + completion screens**
+- Intro: add "SurveyPlus" serif brand label, bump study name to `text-3xl italic`, replace muted info block with cleaner copy
+- Completion: **bug fix** — "Done" button links to `/` (researcher dashboard), participants should not go there. Replace with "You can close this tab." Also: swap plain `✓` text char for an SVG checkmark, warmer thank-you copy
+- File: `app/interview/[id]/page.tsx`
+
+**2. Primary color: indigo → warm amber**
+- Indigo is the most overused color in AI-built UIs; fights the warm neutral base
+- New primary: `hsl(35, 92%, 48%)` (deep amber) in light, `hsl(38, 92%, 55%)` in dark
+- Shift warning from amber to orange (`hsl(22, 90%, 52%)`) to avoid collision
+- Also remove hardcoded `dark:text-indigo-400` in report page Regenerate button
+- Files: `app/globals.css`, `app/study/[id]/report/page.tsx`
+
+**3. Use Instrument Serif more boldly**
+- Biggest miss: StudyTabs study name (`text-2xl font-semibold` DM Sans) — change to serif italic
+- Interview intro study name: bump from `text-2xl` to `text-3xl italic`
+- Report "Findings" heading: bump from `text-2xl` to `text-3xl`
+- Files: `components/features/study-tabs.tsx`, `app/interview/[id]/page.tsx`, `app/study/[id]/report/page.tsx`
+
+**4. Monitor stats: visual hierarchy for Completed count**
+- All 4 stat cards are identical weight — Completed should dominate
+- Add `border-l-4 border-l-primary` and bump number to `text-4xl` on Completed card only
+- File: `app/study/[id]/monitor/page.tsx`
+
 ### Polish Tasks
 - [ ] Toast notifications for user actions
 - [ ] Better error messages for API failures

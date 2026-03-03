@@ -182,7 +182,7 @@ export default function ReportPage() {
               <button
                 onClick={generateReport}
                 disabled={isGenerating}
-                className="text-sm text-primary dark:text-indigo-400 hover:underline"
+                className="text-sm text-primary hover:underline"
               >
                 {isGenerating ? "Regenerating..." : "Regenerate"}
               </button>
@@ -196,7 +196,7 @@ export default function ReportPage() {
 
             {/* Findings */}
             <section className="space-y-6">
-              <h2 className="font-serif text-2xl font-normal text-foreground">Findings</h2>
+              <h2 className="font-serif text-3xl font-normal text-foreground">Findings</h2>
 
               {report.findings.map((finding, idx) => (
                 <div key={idx} className="rounded-lg border border-border bg-card p-8 space-y-6">

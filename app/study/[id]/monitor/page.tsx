@@ -143,8 +143,8 @@ export default function MonitorPage() {
         <StudyContext study={study} />
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="text-3xl font-semibold text-foreground mb-1">
+          <div className="rounded-lg border border-border border-l-4 border-l-primary bg-card p-6">
+            <div className="text-4xl font-semibold text-foreground mb-1">
               {stats.complete}
             </div>
             <div className="text-sm text-muted-foreground">Completed</div>

@@ -468,17 +468,16 @@ STYLE:
         </div>
         <div className="max-w-md w-full bg-card rounded-lg border border-border p-8 space-y-6 fade-up">
           <div className="text-center space-y-3">
-            <h1 className="font-serif text-2xl font-normal text-foreground">{study.name}</h1>
+            <p className="font-serif text-sm italic text-muted-foreground">SurveyPlus</p>
+            <h1 className="font-serif text-3xl font-normal italic text-foreground">{study.name}</h1>
             <p className="text-muted-foreground">
-              You&rsquo;ll be chatting with an AI interviewer about your experience. This should take about 5-10 minutes.
+              You&rsquo;ll be chatting with an AI interviewer. This should take about 5&ndash;10 minutes.
             </p>
           </div>
 
-          <div className="rounded-lg bg-muted/30 p-4 space-y-2">
-            <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Note:</strong> This is an AI-moderated interview. Your responses will help inform research on: {study.researchGoal}
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground text-center">
+            Your responses will be kept confidential and used only for research purposes.
+          </p>
 
           <button
             onClick={handleStartInterview}
@@ -540,15 +539,13 @@ STYLE:
       {/* Input Area */}
       {isComplete ? (
         <div className="border-t border-border bg-card px-6 py-8 text-center fade-up">
-          <div className="text-4xl mb-3">✓</div>
-          <p className="font-serif text-lg font-normal text-foreground mb-2">Interview Complete</p>
-          <p className="text-sm text-muted-foreground mb-6">Thank you for participating!</p>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground px-6 py-3 font-medium hover:bg-primary/90 transition-colors"
-          >
-            Done
-          </a>
+          <div className="flex justify-center mb-3">
+            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="font-serif text-lg font-normal text-foreground mb-2">Thank you for your time.</p>
+          <p className="text-sm text-muted-foreground">Your responses have been recorded. You can close this tab.</p>
         </div>
       ) : (
         <div className="border-t border-border bg-card px-6 py-4">

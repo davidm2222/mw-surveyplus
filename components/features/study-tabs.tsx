@@ -57,7 +57,7 @@ export function StudyTabs({ study }: StudyTabsProps) {
             </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-semibold text-foreground truncate">
+                <h1 className="font-serif text-2xl font-normal italic text-foreground truncate">
                   {study.name}
                 </h1>
                 <Badge variant={statusVariant}>{statusLabel}</Badge>
