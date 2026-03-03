@@ -442,6 +442,9 @@ On "New Study" screen: start from scratch OR pick a template (onboarding frictio
 **Content-Based Follow-Up Decisions (AI-Driven)** — Priority: High
 Instead of word count + follow-up count heuristics, have AI evaluate each response: "Did I get what I need for this research question?" Returns `shouldContinue: bool` with reasoning. Still respects hard caps. Extra API call per response (~2s latency, 2x cost). Hybrid approach (heuristics for clear cases, AI evaluation for ambiguous ones) mitigates cost.
 
+**Natural conversation style** - Priority: High
+participant knows they're talking to a chatbot and not a human, but it should still feel natural and comfortable. it should not veer into sounding like a therapy session despite the similar goals of UX and therapy at times. Shouldn't hide that it's a bot, but should ensure participant is always comfortable so that they are encouraged to be honest and stay engaged.
+
 **Voice Input for Participants** — Priority: Low-Medium
 Speech-to-text input option. More natural on mobile; still needs text fallback for accessibility.
 
