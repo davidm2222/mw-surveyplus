@@ -8,12 +8,13 @@ import { timeAgo, truncate } from "@/lib/utils"
 
 interface StudyCardProps {
   study: Study
+  completedInterviewCount?: number
   onView?: (studyId: string) => void
   onEdit?: (studyId: string) => void
   onDelete?: (studyId: string) => void
 }
 
-export function StudyCard({ study, onView, onEdit, onDelete }: StudyCardProps) {
+export function StudyCard({ study, completedInterviewCount, onView, onEdit, onDelete }: StudyCardProps) {
   const statusVariant = {
     draft: "secondary" as const,
     active: "default" as const,
@@ -61,22 +62,12 @@ export function StudyCard({ study, onView, onEdit, onDelete }: StudyCardProps) {
             questions
           </div>
           {study.status !== "draft" && (
-            <>
-              <div>
-                <span className="font-medium text-foreground">
-                  {study.questionFramework?.length || 0}
-                </span>{" "}
-                responses
-              </div>
-              {study.status === "complete" && (
-                <div>
-                  <span className="font-medium text-foreground">
-                    {Math.round((study.questionFramework?.length || 0) / (study.researchQuestions?.length || 1) * 100)}%
-                  </span>{" "}
-                  completion
-                </div>
-              )}
-            </>
+            <div>
+              <span className="font-medium text-foreground">
+                {completedInterviewCount ?? "—"}
+              </span>{" "}
+              responses
+            </div>
           )}
         </div>
       </CardContent>

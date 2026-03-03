@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/features/empty-state"
 import { ThemeToggle } from "@/components/features/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { useStudies } from "@/hooks/useStudy"
-import { deleteStudy } from "@/lib/db"
+import { deleteStudy, getCompletedInterviewCount } from "@/lib/db"
 
 const RESEARCHER_ID_KEY = "surveyplus_researcher_id"
 
@@ -30,6 +30,15 @@ export default function HomePage() {
   }, [])
 
   const { studies, activeStudies, draftStudies, completeStudies, loading, refresh } = useStudies(researcherId)
+  const [completedCounts, setCompletedCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    const nonDraftStudies = studies.filter(s => s.status !== 'draft')
+    if (nonDraftStudies.length === 0) return
+    Promise.all(
+      nonDraftStudies.map(s => getCompletedInterviewCount(s.id).then(count => [s.id, count] as [string, number]))
+    ).then(entries => setCompletedCounts(Object.fromEntries(entries)))
+  }, [studies])
 
   const handleCreateStudy = () => {
     router.push("/study/new")
@@ -101,6 +110,7 @@ export default function HomePage() {
                     <StudyCard
                       key={study.id}
                       study={study}
+                      completedInterviewCount={completedCounts[study.id]}
                       onView={handleViewStudy}
                       onEdit={handleEditStudy}
                       onDelete={handleDeleteStudy}
@@ -147,6 +157,7 @@ export default function HomePage() {
                     <StudyCard
                       key={study.id}
                       study={study}
+                      completedInterviewCount={completedCounts[study.id]}
                       onView={handleViewStudy}
                       onEdit={handleEditStudy}
                       onDelete={handleDeleteStudy}

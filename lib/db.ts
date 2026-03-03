@@ -7,6 +7,7 @@ import {
   collection,
   query,
   where,
+  getCountFromServer,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Study, Interview, Report } from '@/types'
@@ -124,6 +125,16 @@ export async function getInterviews(studyId: string): Promise<Interview[]> {
   return snap.docs.map((d) =>
     fromFirestore<Interview>(d.data() as Record<string, unknown>)
   )
+}
+
+export async function getCompletedInterviewCount(studyId: string): Promise<number> {
+  const q = query(
+    collection(db, 'interviews'),
+    where('studyId', '==', studyId),
+    where('status', '==', 'complete')
+  )
+  const snap = await getCountFromServer(q)
+  return snap.data().count
 }
 
 export async function deleteInterview(id: string): Promise<void> {

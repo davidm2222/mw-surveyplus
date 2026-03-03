@@ -257,14 +257,14 @@ Complete end-to-end prototype using localStorage for local demos and testing.
 
 ## Known Issues & Next Steps
 
-### 🔴 #1 PRIORITY: Interview Auto-Completion Broken
-**Status:** Critical - Manual escape hatch exists but not a real solution
+### 🟡 Interview Auto-Completion Unreliable
+**Status:** Partially addressed — "End Interview" button made more prominent as short-term fix
 
 **Issue:**
 Interviews frequently don't auto-complete when the AI signals it's done. The AI says "Thank you for your time" or similar wrap-up language in the chat, but the interview stays in `in_progress` state instead of marking complete.
 
-**Current Workaround:**
-Manual "End Interview" button added as escape hatch. This works but participants shouldn't need it.
+**Short-Term Fix (done):**
+"End Interview" button restyled from tiny text link to a visible bordered button at the bottom of the chat. Participants can now easily find and click it.
 
 **Root Cause:**
 Completion detection logic in `app/interview/[id]/page.tsx` isn't properly recognizing when the AI has finished the interview.
@@ -274,6 +274,11 @@ Completion detection logic in `app/interview/[id]/page.tsx` isn't properly recog
 - [ ] Review the instruction/decision flow sent to the AI
 - [ ] Test: AI says "we're done" → should immediately show completion screen
 - [ ] Remove manual button once auto-completion is reliable
+
+### 🔴 Dashboard Response Count Bug (Fixed)
+**Status:** Fixed — was showing `questionFramework.length` (config field) instead of completed interview count
+
+**Fix:** Added `getCompletedInterviewCount(studyId)` using Firestore `getCountFromServer`, fetched on dashboard load via `Promise.all`, passed to `StudyCard` as `completedInterviewCount` prop. Now shows `—` until loaded, then real count of completed interviews.
 
 ### Polish Tasks
 - [ ] Toast notifications for user actions

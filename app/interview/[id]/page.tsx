@@ -576,9 +576,9 @@ STYLE:
             <button
               onClick={handleEndInterviewEarly}
               disabled={isTyping}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline disabled:opacity-50"
+              className="text-sm text-muted-foreground hover:text-foreground border border-border rounded-md px-4 py-2 transition-colors hover:bg-muted disabled:opacity-50"
             >
-              End interview early
+              End interview
             </button>
           </div>
         </div>
